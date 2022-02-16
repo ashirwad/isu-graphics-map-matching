@@ -1,0 +1,16 @@
+---
+title: "Map matching in R"
+subtitle: "Introducing the forthcoming `mapmatchr` package"
+author: "Ashirwad Barnwal"
+date: "2022-02-15"
+output:
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      ratio: 16:9
+---
+
