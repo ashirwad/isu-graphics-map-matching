@@ -237,3 +237,24 @@ snap_gps_traces <- function(network,
     as_xml_document()
 }
 
+# Visualization -----------------------------------------------------------
+viz_snap_output <- function(gps, snap_output) {
+  mapview(st_geometry(gps)) +
+    mapview(
+      st_as_sf(snap_output, wkt = "mgeom", crs = 26915) %>% st_geometry(),
+      layer.name = "mgeom"
+    ) +
+    mapview(
+      st_as_sf(snap_output, wkt = "pgeom", crs = 26915) %>%
+        st_cast("POINT") %>%
+        st_geometry(),
+      layer.name = "pgeom_points"
+    ) +
+    mapview(
+      st_as_sf(snap_output, wkt = "pgeom", crs = 26915) %>% st_geometry(),
+      layer.name = "pgeom_path"
+    )
+}
+
+
+
