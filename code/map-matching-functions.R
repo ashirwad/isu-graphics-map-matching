@@ -258,3 +258,34 @@ viz_snap_output <- function(gps, snap_output) {
 
 
 
+
+
+
+
+.define_buttons <- function(snap_output, num_fields) {
+  map2(
+    unname(num_fields),
+    names(num_fields),
+    ~ list(
+      method = "update",
+      args = list(
+        list(
+          y = list(
+            pluck(snap_output, .x) %>%
+              str_split(",") %>%
+              simplify() %>%
+              as.numeric()
+          ),
+          yaxis = list(title = list(text = .y))
+        )
+      ),
+      label = .y
+    )
+  )
+}
+
+
+
+
+
+
