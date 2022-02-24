@@ -238,7 +238,7 @@ snap_gps_traces <- function(network,
 }
 
 # Visualization -----------------------------------------------------------
-viz_snap_output <- function(gps, snap_output) {
+viz_snap_output_geom <- function(gps, snap_output) {
   mapview(st_geometry(gps)) +
     mapview(
       st_as_sf(snap_output, wkt = "mgeom", crs = 26915) %>% st_geometry(),
@@ -256,11 +256,53 @@ viz_snap_output <- function(gps, snap_output) {
     )
 }
 
+viz_snap_output_num <- function(snap_output) {
+  num_fields <- c("error", "length", "offset", "spdist", "ep", "tp") %>%
+    set_names(
+      c(
+        "GPS error (meter)", "Edge length (meter)", "Offset (meter)",
+        "SP length (meter)", "Emission probability", "Transit probability"
+      )
+    )
 
+  init_y <- snap_output %>%
+    pluck("error") %>%
+    str_split(",") %>%
+    simplify() %>%
+    as.numeric()
+  init_x <- seq(1, length(init_y))
 
-
-
-
+  plot_ly(
+    x = init_x,
+    y = init_y,
+    mode = "lines+markers"
+  ) %>%
+    layout(
+      xaxis = list(title = list(text = "Point index")),
+      yaxis = list(title = list(text = names(num_fields[1]))),
+      updatemenus = list(
+        list(
+          buttons = .define_buttons(snap_output, num_fields),
+          showactive = TRUE,
+          x = 0.11,
+          xanchor = "left",
+          y = 1.1,
+          yanchor = "top",
+          pad = list(l = 0)
+        )
+      ),
+      annotations = list(
+        list(
+          text = "Feature:",
+          showarrow = FALSE,
+          x = 0,
+          y = 1.08,
+          yref = "paper",
+          align = "left"
+        )
+      )
+    )
+}
 
 .define_buttons <- function(snap_output, num_fields) {
   map2(
