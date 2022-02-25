@@ -100,3 +100,16 @@ knitr::include_graphics(
   "https://raw.githubusercontent.com/fmm-wiki/fmm-wiki.github.io/master/assets/images/fmm.png"
 )
 ```
+
+---
+
+class: top, left
+
+## Meet the fast map matching ([FMM](https://fmm-wiki.github.io/)) tool
+
+```{r fmm-wiki, echo = FALSE}
+knitr::include_url("https://fmm-wiki.github.io/", height = "500px")
+```
+
+
+
