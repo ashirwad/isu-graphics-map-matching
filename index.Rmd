@@ -111,5 +111,14 @@ class: top, left
 knitr::include_url("https://fmm-wiki.github.io/", height = "500px")
 ```
 
+---
+
+class: top, left
+
+## FMM tool overview
+
+```{r fmm-tool-overview, echo = FALSE, fig.align = "center"}
+knitr::include_graphics("img/fmm-tool-overview.png")
+```
 
 
