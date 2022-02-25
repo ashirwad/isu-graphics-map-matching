@@ -121,4 +121,35 @@ class: top, left
 knitr::include_graphics("img/fmm-tool-overview.png")
 ```
 
+---
+
+class: top, left
+
+## Input 1: Road network
+
+.pull-left-30[
+
+#### Fields & definition:
+
+```{r road-network-fields, echo = FALSE}
+tibble(
+  field = c("id", "source", "target"),
+  definition = c(
+    "ID of a line",
+    "source node ID", 
+    "target node ID"
+  )
+) %>%
+  kbl("html")
+```
+
+]
+
+.pull-right-70[
+
+```{r road-network-graph, echo = FALSE, fig.align = "center", out.width = "70%"}
+knitr::include_graphics("https://fmm-wiki.github.io/assets/images/network.png")
+```
+
+]
 
