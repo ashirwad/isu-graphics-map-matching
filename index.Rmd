@@ -1,8 +1,8 @@
 ---
 title: "Map matching in R"
-subtitle: "Introducing the forthcoming `mapmatchr` package"
+subtitle: "Introducing the forthcoming 'mapmatchr' package"
 author: "Ashirwad Barnwal"
-date: "2022-02-15"
+date: "2022-02-24"
 output:
   xaringan::moon_reader:
     css: xaringan-themer.css
@@ -14,3 +14,16 @@ output:
       ratio: 16:9
 ---
 
+class: top, left
+
+## What is map matching?
+
+--
+
+#### It's the process of matching noisy GPS data to the most probable travel route.
+
+--
+
+```{r title-cover-closeup, echo = FALSE, fig.align = "center", out.width = "80%"}
+knitr::include_graphics(here("img", "title-cover-closeup.png"))
+```
