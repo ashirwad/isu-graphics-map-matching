@@ -88,3 +88,15 @@ knitr::include_graphics("img/map-match-tools-matrix.png")
 ```
 
 ]
+
+---
+
+class: middle, center
+
+# Hello, FMM!
+
+```{r fmm-logo, echo = FALSE, out.width = "60%"}
+knitr::include_graphics(
+  "https://raw.githubusercontent.com/fmm-wiki/fmm-wiki.github.io/master/assets/images/fmm.png"
+)
+```
