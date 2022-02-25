@@ -50,4 +50,41 @@ class: top, left
 
 - **Transportation researchers**: Travel pattern analyses (e.g., Do older drivers with cognition and/or vision problem(s) prefer one route over another?)
 
+---
 
+class: top, left
+
+## How can we perform map matching?
+
+.pull-left-30[
+
+```{r map-match-tool-options, echo = FALSE}
+tibble(
+  option = c(
+    "Google Snap to Roads API", "Mapbox Map Matching API", "QGIS Plugin", 
+    "Fast Map Matching (FMM)"
+  ),
+  url = c(
+    "https://developers.google.com/maps/documentation/roads/snap",
+    "https://docs.mapbox.com/api/navigation/map-matching/",
+    "https://github.com/jagodki/Offline-MapMatching",
+    "https://fmm-wiki.github.io/"
+  )
+) %>% 
+  mutate(option = cell_spec(option, "html", link = url)) %>%
+  select("Four popular options" = option) %>%
+  kbl("html", escape = FALSE) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover")
+  )
+```
+
+]
+
+.pull-right-70[
+
+```{r map-match-tools-matrix, echo = FALSE, fig.align = "center"}
+knitr::include_graphics("img/map-match-tools-matrix.png")
+```
+
+]
