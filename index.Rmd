@@ -27,3 +27,27 @@ class: top, left
 ```{r title-cover-closeup, echo = FALSE, fig.align = "center", out.width = "80%"}
 knitr::include_graphics(here("img", "title-cover-closeup.png"))
 ```
+
+---
+
+class: top, left
+
+## Who are interested in map matching and why?
+
+--
+
+#### Not surprisingly, anybody who deals with GPS data!
+
+--
+
+- **Auto insurance companies**: Crash risk assessment (e.g., Are drivers often driving through high crash risk roads? Do we need to adjust premiums?)
+
+--
+
+- **Highway agencies**: Streamline winter maintenance efforts (e.g., Are snowplows serving the same route multiple times? Can they be directed somewhere else?)
+
+--
+
+- **Transportation researchers**: Travel pattern analyses (e.g., Do older drivers with cognition and/or vision problem(s) prefer one route over another?)
+
+
