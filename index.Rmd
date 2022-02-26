@@ -632,3 +632,48 @@ reveal <- .define_map_match_config(
   message() #BREAK
 ```
 
+---
+
+class: middle, center
+
+# Main functions
+
+---
+
+class: top, left
+
+`r chunk_reveal("snap-gps-traces-demo", break_type = "user", left_assign = TRUE, title = "## Main function: Snap GPS traces")`
+
+```{r snap-gps-traces-demo, include = FALSE}
+snap_res <- args(snap_gps_traces) #BREAK
+
+snap_res <- read_delim(
+  here("data", "snap-output.txt"), 
+  delim = ";", 
+  col_types = cols(.default = "c")
+) %>%
+  glimpse() #BREAK
+```
+
+---
+
+class: top, left
+
+`r chunk_reveal("viz-snap-output-geom", break_type = "user", left_assign = TRUE, title = "## Main function: Visualize snap output", chunk_options = "warning = FALSE, out.width = '100%'")`
+
+```{r viz-snap-output-geom, include = FALSE}
+reveal <- args(viz_snap_output_geom) #BREAK
+reveal <- viz_snap_output_geom(gps, snap_res) #BREAK
+```
+
+---
+
+class: top, left
+
+`r chunk_reveal("viz-snap-output-num", break_type = "user", left_assign = TRUE, title = "## Main function: Visualize snap output", chunk_options = "message = FALSE, out.width = '100%'")`
+
+```{r viz-snap-output-num, include = FALSE}
+reveal <- args(viz_snap_output_num) #BREAK
+reveal <- viz_snap_output_num(snap_res) #BREAK
+```
+
