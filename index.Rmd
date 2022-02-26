@@ -367,3 +367,113 @@ knitr::include_graphics("https://fmm-wiki.github.io/assets/images/demo1.png")
 
 ]
 
+---
+
+class: middle, center
+
+# Intro to GIS basics
+
+---
+
+class: top, left
+
+## GIS file formats
+
+.pull-left[
+
+```{r gis-file-formats-smry-table, echo = FALSE}
+tribble(
+  ~FORMAT, ~SHAPEFILE, ~GEOJSON, ~GEOPACKAGE,
+  "Age (years)", "30", "10", "5",
+  "Compatibility", "GIS", "GIS, any text editor", "GIS, SQL",
+  "Relative size", "1.00", "2.26", "1.30",
+  "Compression ratio", "4.79:1", "12.08:1", "4.53:1",
+  "QGIS performance", "Good", "Bad", "Good",
+  "Use case", "Old standard", "Web, small data sets", "New standard"
+) %>%
+  kbl("html")
+```
+
+]
+
+.pull-right[
+
+```{r sf-package-website, echo = FALSE}
+knitr::include_url("https://r-spatial.github.io/sf/", height = "500px")
+```
+
+]
+
+---
+
+class: top, left
+
+## Road network sometimes has topological errors
+
+.pull-left[
+
+```{r topo-error-definition-table, echo = FALSE}
+tibble(
+  error = c("Dangles", "Switchbacks", "Knots/Loops", "Overshoots", "Undershoots"),
+  definition = c(
+    "Lines that should be connected are disconnected", 
+    "A line has a bend in it", 
+    "A line crosses itself or self-overlaps",
+    "A line extends past the line it should connect to",
+    "A line does not touch the line it should connect to"
+  )
+) %>%
+  kbl("html")
+```
+
+]
+
+.pull-right[
+
+```{r topo-errors-viz, echo = FALSE}
+knitr::include_graphics(
+  "https://cdn.shortpixel.ai/spai/w_620+q_glossy+ret_img+to_webp/https://www.gislounge.com/wp-content/uploads/2011/11/types-digitizing-GIS-errors.png"
+)
+```
+
+]
+
+---
+
+class: top, left
+
+## Clean topological errors beforehand
+
+.pull-left[
+
+#### GRASS GIS
+
+```{r grass-v-clean-tool-page, echo = FALSE}
+knitr::include_url("https://grass.osgeo.org/grass78/manuals/v.clean.html")
+```
+
+]
+
+.pull-right[
+
+#### R interface for GRASS
+
+```{r rgrass-pkg-website, echo = FALSE}
+knitr::include_url("https://rsbivand.github.io/rgrass/index.html")
+```
+
+]
+
+---
+
+class: top, left
+
+## Check this tutorial
+
+```{r spatial-networks-tutorial, echo = FALSE}
+knitr::include_url(
+  "https://r-spatial.org/r/2019/09/26/spatial-networks.html", height = "500px"
+)
+```
+
+
