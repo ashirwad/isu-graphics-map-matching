@@ -204,3 +204,64 @@ id;x;y;timestamp
 
 ]
 
+---
+
+class: top, left
+
+## Input 3: Upper Bounded Origin Destination Table (UBODT) file
+
+.pull-left[
+
+#### Fields & definition:
+
+```{r ubodt-fields, echo = FALSE}
+tibble(
+  field = c("source", "target", "next_n", "prev_n", "next_e", "distance"),
+  definition = c(
+    "Source node index", 
+    "Target node index", 
+    "Index of the node visited after the source node",
+    "Index of the previous node visited before the target node",
+    "Index of the next edge visited after the source node",
+    "Shortest path distance between the source and target nodes"
+  )
+) %>%
+  kbl("html")
+```
+
+**Note**: UBODT file is only needed for the `FMM` tool
+
+]
+
+.pull-right[
+
+#### Valid example:
+
+```{verbatim ubodt-example}
+source;target;next_n;prev_n;next_e;distance
+0;6;4;7;4;3
+0;10;4;5;4;3
+0;8;4;5;4;3
+0;9;4;4;4;2
+0;7;4;4;4;2
+0;4;4;0;4;1
+0;12;4;9;4;3
+0;1;1;0;0;1
+0;5;4;4;4;2
+1;9;0;4;1;3
+1;7;0;4;1;3
+1;4;0;0;1;2
+1;5;0;4;1;3
+1;0;0;1;1;1
+```
+
+]
+
+---
+
+## UBODT file is computed from the road network
+
+```{r ubodt-row-info, echo = FALSE, fig.align = "center"}
+knitr::include_graphics("img/ubodt-row-info.png")
+```
+
