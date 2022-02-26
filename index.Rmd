@@ -265,3 +265,68 @@ source;target;next_n;prev_n;next_e;distance
 knitr::include_graphics("img/ubodt-row-info.png")
 ```
 
+---
+
+class: top, left
+
+## Input 4: Config files
+
+.pull-left[
+
+#### UBODT config
+
+```{verbatim ubodt-config-example}
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+  <input>
+    <network>
+      <file>../data/edges.shp</file>
+      <id>id</id>
+      <source>source</source>
+      <target>target</target>
+    </network>
+  </input>
+  <parameters>
+    <delta>3</delta>
+  </parameters>
+  <output>
+    <file>../data/ubodt.txt</file>
+  </output>
+</config>
+```
+
+]
+
+.pull-right[
+
+#### FMM config
+
+```{verbatim fmm-config-example}
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+  <input>
+    <ubodt>
+      <file>../data/ubodt.txt</file>
+    </ubodt>
+    <network>
+      <file>../data/edges.shp</file>
+      <id>id</id>
+    </network>
+    <gps>
+      <file>../data/trips.shp</file>
+      <id>id</id>
+    </gps>
+  </input>
+  <parameters>
+    <k>4</k>
+    <r>0.4</r>
+    <gps_error>0.5</gps_error>
+  </parameters>
+  <output>
+    <file>mr.txt</file>
+  </output>
+</config>
+```
+
+]
+
