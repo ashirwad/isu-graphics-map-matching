@@ -330,3 +330,40 @@ class: top, left
 
 ]
 
+---
+
+## Output: Map matching result
+
+.pull-left[
+
+```{r fmm-output-fields, echo = FALSE}
+tibble(
+  field = c(
+    "ogeom", "pgeom", "mgeom", "error", "offset", "spdist", "opath", "cpath", 
+    "tpath"
+  ),
+  definition = c(
+    "Original trajectory geometry", 
+    "A line connecting the matched points", 
+    "The geometry of the cpath",
+    "Distance from each point to its matched point",
+    "Distance from the matched point to the start of the matched edge",
+    "Shortest path distances traversed between consecutive points",
+    "Edge matched to each point in trajectory",
+    "The path traversed by the trajectory",
+    "Edges traversed between consecutive points"
+  )
+) %>%
+  kbl("html")
+```
+
+]
+
+.pull-right[
+
+```{r fmm-output-graph, echo = FALSE, fig.align = "center"}
+knitr::include_graphics("https://fmm-wiki.github.io/assets/images/demo1.png")
+```
+
+]
+
