@@ -545,4 +545,90 @@ mapview(network_geojson) +
   mapview(gps)
 ```
 
+---
+
+class: middle, center
+
+# Hello, mapmatchr!
+
+---
+
+class: middle, center
+
+# Helper functions
+
+---
+
+`r chunk_reveal("transform-network-demo", break_type = "user", left_assign = TRUE, title = "## Helper function 1: Transform network", chunk_options = "warning = FALSE")`
+
+```{r transform-network-demo, include = FALSE}
+reveal <- args(.transform_network) #BREAK
+
+reveal <- network_geojson %>% #BREAK
+  .transform_network() #BREAK
+
+reveal <- network_geojson %>%
+  .transform_network(output = "join_key") #BREAK
+
+reveal <- network_geojson %>%
+  .transform_network(output = "both") #BREAK
+```
+
+---
+
+`r chunk_reveal("viz-transformed-network", break_type = "user", left_assign = TRUE, title = "## Helper function 1b: Visualize transformed network", chunk_options = "warning = FALSE, out.width = '100%'")`
+
+```{r viz-transformed-network, include = FALSE}
+reveal <- args(.viz_transformed_network) #BREAK
+
+reveal <- network_geojson %>%
+  .viz_transformed_network() #BREAK
+```
+
+---
+
+class: top, left
+
+`r chunk_reveal("transform-gps-demo", break_type = "user", left_assign = TRUE, title = "## Helper function 2: Transform GPS", chunk_options = "warning = FALSE")`
+
+```{r transform-gps-demo, include = FALSE}
+reveal <- args(.transform_gps) #BREAK
+
+reveal <- gps %>% #BREAK
+  .transform_gps() #BREAK
+```
+
+---
+
+class: top, left
+
+`r chunk_reveal("define-ubodt-demo", break_type = "user", left_assign = TRUE, title = "## Helper function 3: Define UBODT config")`
+
+```{r define-ubodt-demo, include = FALSE}
+reveal <- args(.define_ubodt_config) #BREAK
+
+reveal <- .define_ubodt_config(
+  network_file = "edges.shp",
+  output_file = "ubodt.txt"
+) %>% #BREAK
+  message() #BREAK
+```
+
+---
+
+class: top, left
+
+`r chunk_reveal("define-map-match-demo", break_type = "user", left_assign = TRUE, title = "## Helper function 4: Define map match config")`
+
+```{r define-map-match-demo, include = FALSE}
+reveal <- args(.define_map_match_config) #BREAK
+
+reveal <- .define_map_match_config(
+  network_file = "edges.shp",
+  gps_file = "trips.csv",
+  output_file = "mr.txt",
+  ubodt_file = "ubodt.txt"
+) %>% #BREAK
+  message() #BREAK
+```
 
