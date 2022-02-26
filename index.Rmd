@@ -677,3 +677,20 @@ reveal <- args(viz_snap_output_num) #BREAK
 reveal <- viz_snap_output_num(snap_res) #BREAK
 ```
 
+---
+
+class: top, left
+
+## Things to do
+
+- Create the package
+- Design logo
+- Write function to automate fmm installation
+- Write paper for submission to Elsevier's SoftwareX
+
+---
+
+class: middle, center
+
+# Thank You!
+
