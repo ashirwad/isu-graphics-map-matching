@@ -476,4 +476,73 @@ knitr::include_url(
 )
 ```
 
+---
+
+class: middle, center
+
+# Import and visualize data
+
+---
+
+class: top, left
+
+`r chunk_reveal("read-network", title = "## Import road network data")`
+
+```{r read-network, include = FALSE}
+# Read Shapefile
+read_sf(here("data", "shapefile")) ->
+  network_shp
+
+# Read GeoJSON
+read_sf(
+  here("data", "geojson", "network.geojson")
+) ->
+  network_geojson
+
+# Read GeoPackage
+read_sf(
+  here("data", "geopackage", "network.gpkg")
+) ->
+  network_gpkg
+```
+
+---
+
+class: top, left
+
+`r chunk_reveal("road-network-viz", title = "## Visualize road network", chunk_options = "out.width = '100%'")`
+
+```{r road-network-viz, include = FALSE}
+mapview(network_geojson)
+```
+
+---
+
+class: top, left
+
+`r chunk_reveal("read-gps", left_assign = TRUE, title = "## Import GPS data")`
+
+```{r read-gps, include = FALSE}
+gps <- read_csv(
+  here("data", "gps.csv"), 
+  show_col_types = FALSE
+) %>%
+  st_as_sf(
+    coords = c("longitude", "latitude"), 
+    crs = 4326 # WGS 84
+  ) %>%
+  st_transform(26915) # NAD83 / UTM zone 15N
+```
+
+---
+
+class: top, left
+
+`r chunk_reveal("gps-viz", title = "## Visualize GPS data", chunk_options = "out.width = '100%'")`
+
+```{r gps-viz, include = FALSE}
+mapview(network_geojson) +
+  mapview(gps)
+```
+
 
