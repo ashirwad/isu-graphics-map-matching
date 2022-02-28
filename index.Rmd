@@ -16,6 +16,32 @@ output:
 
 class: top, left
 
+```{r setup, include = FALSE}
+# Elegant handling of namespace conflicts
+library(conflicted)
+
+# Data wrangling
+library(here)
+library(fs)
+library(rio)
+library(tidyverse)
+
+# Spatial analyses and visualization
+library(sf)
+library(sfnetworks)
+library(tidygraph)
+library(mapview)
+
+# Pretty tables
+library(kableExtra)
+
+# Import local code
+source(here("code", "map-matching-functions.R"))
+
+# Extras
+library(knitr)
+```
+
 ## What is map matching?
 
 --
@@ -693,4 +719,3 @@ class: top, left
 class: middle, center
 
 # Thank You!
-
