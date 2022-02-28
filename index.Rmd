@@ -23,14 +23,17 @@ library(conflicted)
 # Data wrangling
 library(here)
 library(fs)
-library(rio)
 library(tidyverse)
+library(xml2)
 
 # Spatial analyses and visualization
 library(sf)
 library(sfnetworks)
 library(tidygraph)
 library(mapview)
+library(leafsync)
+library(plotly)
+conflict_prefer("layout", "plotly")
 
 # Pretty tables
 library(kableExtra)
@@ -40,6 +43,7 @@ source(here("code", "map-matching-functions.R"))
 
 # Extras
 library(knitr)
+library(flipbookr)
 ```
 
 ```{r xaringan-themer, include = FALSE}
@@ -75,8 +79,8 @@ style_mono_accent(
 
 --
 
-```{r title-cover-closeup, echo = FALSE, fig.align = "center", out.width = "80%"}
-knitr::include_graphics(here("img", "title-cover-closeup.png"))
+```{r map-matching-example, echo = FALSE, fig.align = "center", out.width = "80%"}
+knitr::include_graphics(here("img", "map-matching-example.png"))
 ```
 
 ---
