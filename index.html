@@ -1,0 +1,2304 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Map matching in R</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Ashirwad Barnwal" />
+    <meta name="date" content="2022-02-24" />
+    <script src="libs/header-attrs-2.11/header-attrs.js"></script>
+    <script src="libs/kePrint-0.0.1/kePrint.js"></script>
+    <link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+    <script src="libs/htmlwidgets-1.5.4/htmlwidgets.js"></script>
+    <script src="libs/jquery-3.5.1/jquery.min.js"></script>
+    <link href="libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
+    <script src="libs/leaflet-1.3.1/leaflet.js"></script>
+    <link href="libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
+    <script src="libs/proj4-2.6.2/proj4.min.js"></script>
+    <script src="libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
+    <link href="libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
+    <script src="libs/leaflet-binding-2.1.0/leaflet.js"></script>
+    <script src="libs/leaflet-providers-1.9.0/leaflet-providers_1.9.0.js"></script>
+    <script src="libs/leaflet-providers-plugin-2.1.0/leaflet-providers-plugin.js"></script>
+    <link href="libs/HomeButton-0.0.1/home-button.css" rel="stylesheet" />
+    <script src="libs/HomeButton-0.0.1/home-button.js"></script>
+    <script src="libs/HomeButton-0.0.1/easy-button-src.min.js"></script>
+    <script src="libs/clipboard-0.0.1/setClipboardText.js"></script>
+    <link href="libs/mapviewCSS-0.0.1/mapview-popup.css" rel="stylesheet" />
+    <link href="libs/mapviewCSS-0.0.1/mapview.css" rel="stylesheet" />
+    <script src="libs/Leaflet.Sync-0.0.5/L.Map.Sync.js"></script>
+    <script src="libs/plotly-binding-4.10.0/plotly.js"></script>
+    <script src="libs/typedarray-0.1/typedarray.min.js"></script>
+    <link href="libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
+    <script src="libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
+    <link href="libs/plotly-htmlwidgets-css-2.5.1/plotly-htmlwidgets.css" rel="stylesheet" />
+    <script src="libs/plotly-main-2.5.1/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Map matching in R
+## Introducing the forthcoming ‘mapmatchr’ package
+### Ashirwad Barnwal
+### 2022-02-24
+
+---
+
+
+class: top, left
+
+
+
+
+
+## What is map matching?
+
+--
+
+#### It's the process of matching noisy GPS data to the most probable travel route.
+
+--
+
+&lt;img src="C:/Users/ashirwad/Documents/my-git-repos/talks/isu-graphics-map-matching/img/map-matching-example.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+
+class: top, left
+
+## Who are interested in map matching and why?
+
+--
+
+#### Not surprisingly, anybody who deals with GPS data!
+
+--
+
+- **Auto insurance companies**: Crash risk assessment (e.g., Are drivers often driving through high crash risk roads? Do we need to adjust premiums?)
+
+--
+
+- **Highway agencies**: Streamline winter maintenance efforts (e.g., Are snowplows serving the same route multiple times? Can they be directed somewhere else?)
+
+--
+
+- **Transportation researchers**: Travel pattern analyses (e.g., Do older drivers with cognition and/or vision problem(s) prefer one route over another?)
+
+---
+
+class: top, left
+
+## How can we perform map matching?
+
+.pull-left-30[
+
+&lt;table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Four popular options &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; &lt;a href="https://developers.google.com/maps/documentation/roads/snap" style="     "&gt;Google Snap to Roads API&lt;/a&gt; &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; &lt;a href="https://docs.mapbox.com/api/navigation/map-matching/" style="     "&gt;Mapbox Map Matching API&lt;/a&gt; &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; &lt;a href="https://github.com/jagodki/Offline-MapMatching" style="     "&gt;QGIS Plugin&lt;/a&gt; &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; &lt;a href="https://fmm-wiki.github.io/" style="     "&gt;Fast Map Matching (FMM)&lt;/a&gt; &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+]
+
+.pull-right-70[
+
+&lt;img src="img/map-matching-tools-matrix.png" width="3648" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+
+class: middle, center
+
+# Hello, FMM!
+
+&lt;img src="https://raw.githubusercontent.com/fmm-wiki/fmm-wiki.github.io/master/assets/images/fmm.png" width="60%" /&gt;
+
+---
+
+class: top, left
+
+## Meet the fast map matching ([FMM](https://fmm-wiki.github.io/)) tool
+
+&lt;iframe src="https://fmm-wiki.github.io/" width="100%" height="500px" data-external="1"&gt;&lt;/iframe&gt;
+
+---
+
+class: top, left
+
+## FMM tool overview
+
+&lt;img src="img/fmm-tool-overview.png" width="4692" style="display: block; margin: auto;" /&gt;
+
+---
+
+class: top, left
+
+## Input 1: Road network
+
+.pull-left-30[
+
+#### Fields &amp; definition:
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; field &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; definition &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; id &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; ID of a line &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; source &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; source node ID &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; target &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; target node ID &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+]
+
+.pull-right-70[
+
+&lt;img src="https://fmm-wiki.github.io/assets/images/network.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+
+class: top, left
+
+## Input 2: GPS points
+
+.pull-left[
+
+#### Fields &amp; definition:
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; field &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; definition &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; id &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Trip ID &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; x &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; GPS longitude &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; y &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; GPS latitude &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; timestamp (optional) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Observation timestamp &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+#### Additional notes:
+
+- Each row has a single observation
+- GPS points must be sorted by trip ID and timestamp
+- Use `;` as a delimiter
+
+]
+
+.pull-right[
+
+#### Valid example:
+
+
+```default
+id;x;y;timestamp
+1;1.65889;0.25098;1
+1;1.65494;0.70183;2
+1;2.49336;1.76567;3
+1;3.54929;1.88827;4
+1;4.13064;2.45776;5
+2;4.15042;1.60353;2
+2;3.47019;0.92330;4
+2;2.40635;0.92330;6
+2;2.14533;1.53234;8
+2;2.08601;2.57641;10
+```
+
+]
+
+---
+
+class: top, left
+
+## Input 3: Upper Bounded Origin Destination Table (UBODT) file
+
+.pull-left[
+
+#### Fields &amp; definition:
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; field &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; definition &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; source &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Source node index &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; target &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Target node index &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; next_n &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Index of the node visited after the source node &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; prev_n &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Index of the previous node visited before the target node &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; next_e &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Index of the next edge visited after the source node &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; distance &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Shortest path distance between the source and target nodes &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+**Note**: UBODT file is only needed for the `FMM` tool
+
+]
+
+.pull-right[
+
+#### Valid example:
+
+
+```default
+source;target;next_n;prev_n;next_e;distance
+0;6;4;7;4;3
+0;10;4;5;4;3
+0;8;4;5;4;3
+0;9;4;4;4;2
+0;7;4;4;4;2
+0;4;4;0;4;1
+0;12;4;9;4;3
+0;1;1;0;0;1
+0;5;4;4;4;2
+1;9;0;4;1;3
+1;7;0;4;1;3
+1;4;0;0;1;2
+1;5;0;4;1;3
+1;0;0;1;1;1
+```
+
+]
+
+---
+
+## UBODT file is computed from the road network
+
+&lt;img src="img/ubodt-row-info.png" width="4048" style="display: block; margin: auto;" /&gt;
+
+---
+
+class: top, left
+
+## Input 4: Config files
+
+.pull-left[
+
+#### UBODT config
+
+
+```default
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;config&gt;
+  &lt;input&gt;
+    &lt;network&gt;
+      &lt;file&gt;../data/edges.shp&lt;/file&gt;
+      &lt;id&gt;id&lt;/id&gt;
+      &lt;source&gt;source&lt;/source&gt;
+      &lt;target&gt;target&lt;/target&gt;
+    &lt;/network&gt;
+  &lt;/input&gt;
+  &lt;parameters&gt;
+    &lt;delta&gt;3&lt;/delta&gt;
+  &lt;/parameters&gt;
+  &lt;output&gt;
+    &lt;file&gt;../data/ubodt.txt&lt;/file&gt;
+  &lt;/output&gt;
+&lt;/config&gt;
+```
+
+]
+
+.pull-right[
+
+#### FMM config
+
+
+```default
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;config&gt;
+  &lt;input&gt;
+    &lt;ubodt&gt;
+      &lt;file&gt;../data/ubodt.txt&lt;/file&gt;
+    &lt;/ubodt&gt;
+    &lt;network&gt;
+      &lt;file&gt;../data/edges.shp&lt;/file&gt;
+      &lt;id&gt;id&lt;/id&gt;
+    &lt;/network&gt;
+    &lt;gps&gt;
+      &lt;file&gt;../data/trips.shp&lt;/file&gt;
+      &lt;id&gt;id&lt;/id&gt;
+    &lt;/gps&gt;
+  &lt;/input&gt;
+  &lt;parameters&gt;
+    &lt;k&gt;4&lt;/k&gt;
+    &lt;r&gt;0.4&lt;/r&gt;
+    &lt;gps_error&gt;0.5&lt;/gps_error&gt;
+  &lt;/parameters&gt;
+  &lt;output&gt;
+    &lt;file&gt;mr.txt&lt;/file&gt;
+  &lt;/output&gt;
+&lt;/config&gt;
+```
+
+]
+
+---
+
+## Output: Map matching result
+
+.pull-left[
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; field &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; definition &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; ogeom &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Original trajectory geometry &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; pgeom &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; A line connecting the matched points &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; mgeom &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; The geometry of the cpath &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; error &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Distance from each point to its matched point &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; offset &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Distance from the matched point to the start of the matched edge &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; spdist &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Shortest path distances traversed between consecutive points &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; opath &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Edge matched to each point in trajectory &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; cpath &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; The path traversed by the trajectory &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; tpath &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Edges traversed between consecutive points &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+]
+
+.pull-right[
+
+&lt;img src="https://fmm-wiki.github.io/assets/images/demo1.png" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+
+class: middle, center
+
+# Intro to GIS basics
+
+---
+
+class: top, left
+
+## GIS file formats
+
+.pull-left[
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; FORMAT &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; SHAPEFILE &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; GEOJSON &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; GEOPACKAGE &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Age (years) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 30 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 10 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 5 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Compatibility &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; GIS &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; GIS, any text editor &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; GIS, SQL &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Relative size &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 1.00 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 2.26 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 1.30 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Compression ratio &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 4.79:1 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 12.08:1 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 4.53:1 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; QGIS performance &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Good &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Bad &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Good &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Use case &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Old standard &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Web, small data sets &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; New standard &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+]
+
+.pull-right[
+
+&lt;iframe src="https://r-spatial.github.io/sf/" width="100%" height="500px" data-external="1"&gt;&lt;/iframe&gt;
+
+]
+
+---
+
+class: top, left
+
+## Road network sometimes has topological errors
+
+.pull-left[
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; error &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; definition &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Dangles &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Lines that should be connected are disconnected &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Switchbacks &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; A line has a bend in it &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Knots/Loops &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; A line crosses itself or self-overlaps &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Overshoots &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; A line extends past the line it should connect to &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Undershoots &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; A line does not touch the line it should connect to &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+]
+
+.pull-right[
+
+![](https://cdn.shortpixel.ai/spai/w_620+q_glossy+ret_img+to_webp/https://www.gislounge.com/wp-content/uploads/2011/11/types-digitizing-GIS-errors.png)&lt;!-- --&gt;
+
+]
+
+---
+
+class: top, left
+
+## Clean topological errors beforehand
+
+.pull-left[
+
+#### GRASS GIS
+
+&lt;iframe src="https://grass.osgeo.org/grass78/manuals/v.clean.html" width="100%" height="400px" data-external="1"&gt;&lt;/iframe&gt;
+
+]
+
+.pull-right[
+
+#### R interface for GRASS
+
+&lt;iframe src="https://rsbivand.github.io/rgrass/index.html" width="100%" height="400px" data-external="1"&gt;&lt;/iframe&gt;
+
+]
+
+---
+
+class: top, left
+
+## Check this tutorial
+
+&lt;iframe src="https://r-spatial.org/r/2019/09/26/spatial-networks.html" width="100%" height="500px" data-external="1"&gt;&lt;/iframe&gt;
+
+---
+
+class: middle, center
+
+# Import and visualize data
+
+---
+
+class: top, left
+
+count: false
+ 
+## Import road network data
+.panel1-read-network-auto[
+
+```r
+# Read Shapefile
+*read_sf(here("data", "shapefile"))
+```
+]
+ 
+.panel2-read-network-auto[
+
+```
+## Simple feature collection with 8 features and 1 field
+## Geometry type: LINESTRING
+## Dimension:     XY
+## Bounding box:  xmin: 568206.3 ymin: 4598184 xmax: 573136.6 ymax: 4602141
+## Projected CRS: NAD83 / UTM zone 15N
+## # A tibble: 8 x 2
+##   road_id                                                               geometry
+##   &lt;chr&gt;                                                         &lt;LINESTRING [m]&gt;
+## 1 52968114 (569107.4 4600923, 569162.5 4600924, 569200.6 4600924, 569223.6 4600~
+## 2 52968327 (570313.9 4600953, 570344.2 4600953, 570376.7 4600953, 570404.5 4600~
+## 3 52968853 (568206.3 4600914, 568264 4600914, 568314 4600914, 568366.6 4600913,~
+## 4 53033919 (569112.8 4600687, 569111.1 4600715, 569108.8 4600753, 569108.5 4600~
+## 5 53034396 (569107.4 4600923, 569107.1 4600943, 569104.2 4601125, 569102.1 4601~
+## 6 53034711 (569130.1 4599550, 569126.9 4599800, 569122.8 4599973, 569121.2 4600~
+## 7 53172262 (570350.5 4598184, 570348.7 4598267, 570345.9 4598386, 570342.5 4598~
+## 8 53172296 (570313.9 4600953, 570311.2 4601011, 570308.2 4601102, 570307.5 4601~
+```
+]
+
+---
+count: false
+ 
+## Import road network data
+.panel1-read-network-auto[
+
+```r
+# Read Shapefile
+read_sf(here("data", "shapefile")) -&gt;
+* network_shp
+```
+]
+ 
+.panel2-read-network-auto[
+
+]
+
+---
+count: false
+ 
+## Import road network data
+.panel1-read-network-auto[
+
+```r
+# Read Shapefile
+read_sf(here("data", "shapefile")) -&gt;
+  network_shp
+
+# Read GeoJSON
+*read_sf(
+* here("data", "geojson", "network.geojson")
+*) 
+```
+]
+ 
+.panel2-read-network-auto[
+
+```
+## Simple feature collection with 8 features and 1 field
+## Geometry type: MULTILINESTRING
+## Dimension:     XY
+## Bounding box:  xmin: 568206.3 ymin: 4598184 xmax: 573136.6 ymax: 4602141
+## Projected CRS: NAD83 / UTM zone 15N
+## # A tibble: 8 x 2
+##   road_id                                                               geometry
+##   &lt;chr&gt;                                                    &lt;MULTILINESTRING [m]&gt;
+## 1 52968114 ((569107.4 4600923, 569162.5 4600924, 569200.6 4600924, 569223.6 460~
+## 2 52968327 ((570313.9 4600953, 570344.2 4600953, 570376.7 4600953, 570404.5 460~
+## 3 52968853 ((568206.3 4600914, 568264 4600914, 568314 4600914, 568366.6 4600913~
+## 4 53033919 ((569112.8 4600687, 569111.1 4600715, 569108.8 4600753, 569108.5 460~
+## 5 53034396 ((569107.4 4600923, 569107.1 4600943, 569104.2 4601125, 569102.1 460~
+## 6 53034711 ((569130.1 4599550, 569126.9 4599800, 569122.8 4599973, 569121.2 460~
+## 7 53172262 ((570350.5 4598184, 570348.7 4598267, 570345.9 4598386, 570342.5 459~
+## 8 53172296 ((570313.9 4600953, 570311.2 4601011, 570308.2 4601102, 570307.5 460~
+```
+]
+
+---
+count: false
+ 
+## Import road network data
+.panel1-read-network-auto[
+
+```r
+# Read Shapefile
+read_sf(here("data", "shapefile")) -&gt;
+  network_shp
+
+# Read GeoJSON
+read_sf(
+  here("data", "geojson", "network.geojson")
+) -&gt;
+* network_geojson
+```
+]
+ 
+.panel2-read-network-auto[
+
+]
+
+---
+count: false
+ 
+## Import road network data
+.panel1-read-network-auto[
+
+```r
+# Read Shapefile
+read_sf(here("data", "shapefile")) -&gt;
+  network_shp
+
+# Read GeoJSON
+read_sf(
+  here("data", "geojson", "network.geojson")
+) -&gt;
+  network_geojson
+
+# Read GeoPackage
+*read_sf(
+* here("data", "geopackage", "network.gpkg")
+*) 
+```
+]
+ 
+.panel2-read-network-auto[
+
+```
+## Simple feature collection with 8 features and 1 field
+## Geometry type: MULTILINESTRING
+## Dimension:     XY
+## Bounding box:  xmin: 568206.3 ymin: 4598184 xmax: 573136.6 ymax: 4602141
+## Projected CRS: NAD83 / UTM zone 15N
+## # A tibble: 8 x 2
+##   road_id                                                                   geom
+##   &lt;chr&gt;                                                    &lt;MULTILINESTRING [m]&gt;
+## 1 52968114 ((569107.4 4600923, 569162.5 4600924, 569200.6 4600924, 569223.6 460~
+## 2 52968327 ((570313.9 4600953, 570344.2 4600953, 570376.7 4600953, 570404.5 460~
+## 3 52968853 ((568206.3 4600914, 568264 4600914, 568314 4600914, 568366.6 4600913~
+## 4 53033919 ((569112.8 4600687, 569111.1 4600715, 569108.8 4600753, 569108.5 460~
+## 5 53034396 ((569107.4 4600923, 569107.1 4600943, 569104.2 4601125, 569102.1 460~
+## 6 53034711 ((569130.1 4599550, 569126.9 4599800, 569122.8 4599973, 569121.2 460~
+## 7 53172262 ((570350.5 4598184, 570348.7 4598267, 570345.9 4598386, 570342.5 459~
+## 8 53172296 ((570313.9 4600953, 570311.2 4601011, 570308.2 4601102, 570307.5 460~
+```
+]
+
+---
+count: false
+ 
+## Import road network data
+.panel1-read-network-auto[
+
+```r
+# Read Shapefile
+read_sf(here("data", "shapefile")) -&gt;
+  network_shp
+
+# Read GeoJSON
+read_sf(
+  here("data", "geojson", "network.geojson")
+) -&gt;
+  network_geojson
+
+# Read GeoPackage
+read_sf(
+  here("data", "geopackage", "network.gpkg")
+) -&gt;
+* network_gpkg
+```
+]
+ 
+.panel2-read-network-auto[
+
+]
+
+&lt;style&gt;
+.panel1-read-network-auto {
+  color: black;
+  width: 38.6060606060606%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-read-network-auto {
+  color: black;
+  width: 59.3939393939394%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-read-network-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+class: top, left
+
+count: false
+ 
+## Visualize road network
+.panel1-road-network-viz-auto[
+
+```r
+*mapview(network_geojson)
+```
+]
+ 
+.panel2-road-network-viz-auto[
+<div id="htmlwidget-f2edabf0d047392941a5" style="width:100%;height:504px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-f2edabf0d047392941a5">{"x":{"options":{"minZoom":1,"maxZoom":52,"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"preferCanvas":false,"bounceAtZoomLimits":false,"maxBounds":[[[-90,-370]],[[90,370]]]},"calls":[{"method":"addProviderTiles","args":["CartoDB.Positron","CartoDB.Positron","CartoDB.Positron",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["CartoDB.DarkMatter","CartoDB.DarkMatter","CartoDB.DarkMatter",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["OpenStreetMap","OpenStreetMap","OpenStreetMap",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["Esri.WorldImagery","Esri.WorldImagery","Esri.WorldImagery",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["OpenTopoMap","OpenTopoMap","OpenTopoMap",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"createMapPane","args":["line",430]},{"method":"addPolylines","args":[[[[{"lng":[-92.1712741120217,-92.170613444721,-92.1701565480703,-92.1698806981515,-92.1693903450506,-92.168942519655,-92.1680712583933,-92.1676193407,-92.1673436392502,-92.166986599102,-92.1665674745204,-92.1659148836355,-92.1655719696523,-92.164610515425,-92.1636584299075,-92.1623782256146,-92.1613500767776,-92.1607597921649,-92.1605025299164,-92.1601830361131,-92.1596740924897,-92.1591173398082,-92.1587269901966,-92.1582787135323,-92.1576305775501,-92.1573449154008,-92.1569878738826,-92.1568035296375],"lat":[41.5569913191977,41.5569976552595,41.5569959017096,41.5569855318906,41.5569905335234,41.5570103309776,41.557021603111,41.5570091701118,41.556991647167,41.5569946206027,41.5570075940414,41.5570321341695,41.5570424194175,41.557041883821,41.5570486008671,41.5570407337783,41.5570429622738,41.5570467546886,41.557058031101,41.557086453261,41.5570697423609,41.5570631936708,41.5570657510083,41.5571069518458,41.5571457972195,41.5571495827718,41.5571525254301,41.5571539653757]}]],[[{"lng":[-92.1568035296375,-92.1564404140257,-92.1560502102331,-92.1557174823142,-92.155417843502,-92.1547663666628,-92.1544241237211,-92.1540531810434,-92.1536203018399,-92.1530348491979,-92.1524731894018,-92.1516403657036,-92.1512688241191,-92.1507549733586,-92.1499173945183,-92.1488987611757,-92.1479088312972,-92.146904475643,-92.1460237674956,-92.1455474588356,-92.144914119229,-92.1445471067929,-92.1442138577614,-92.1437810555436,-92.1430484640008,-92.1423300750922,-92.1414254950471,-92.1408017473143,-92.140573336954,-92.1403786908292,-92.1402558743313,-92.1401430302336,-92.140016666109,-92.1398533691215,-92.139652911593,-92.1394613682267,-92.1392607596016,-92.1391169550002,-92.1389470187216,-92.1387720246809,-92.1386208976871,-92.1383697826999,-92.138314799943,-92.1383126676794,-92.1380473598498,-92.1378224422516,-92.1376116484828,-92.1374336353617,-92.137236815269,-92.1370674849714,-92.1369260248831,-92.1367695326787,-92.1365697595991,-92.1362509550955,-92.1356989930172,-92.1349948439105,-92.1344713555969,-92.1336577658845,-92.1326963676672,-92.1315064172232,-92.1305255274282,-92.1292592157383,-92.1279700264959,-92.1271753967607,-92.1262187529668,-92.1251809142948,-92.1245713204625,-92.1240053165933,-92.1234725431358,-92.1231607385969,-92.1230040544226],"lat":[41.5571539653757,41.5571567978932,41.557152197428,41.5571303995198,41.5571197146434,41.5570905765998,41.5570686609677,41.5570535557431,41.5570412920449,41.5570415255187,41.5570420351008,41.5570357620963,41.5570492416972,41.5570395838028,41.557033241376,41.557035470275,41.5570308818505,41.5570332623152,41.5570406788927,41.5570564717864,41.5570703935764,41.5570946309869,41.5570978176916,41.5570819415051,41.5570624964932,41.5570467925338,41.5570574641463,41.5570679030731,41.5570651789449,41.5570414048578,41.5569970389812,41.5569313396773,41.556829728615,41.5566740473227,41.5564750231975,41.5563047044861,41.5561128271392,41.5559359284865,41.5556443134499,41.5553669374178,41.5550862696334,41.5545827508384,41.5544819889278,41.5544805383351,41.5543000377887,41.5541328933737,41.5539730666371,41.5538386580843,41.5536932990473,41.553598319546,41.5535358512795,41.553508952842,41.5535029886923,41.5534991743057,41.5534925681469,41.5534805617294,41.5534778655833,41.5534645395676,41.5534637348091,41.553467328719,41.5534877216995,41.5535010993555,41.5534712866985,41.5534617175769,41.5534609154402,41.5534734255558,41.5534910969781,41.5534735393665,41.5534599546877,41.5534577810582,41.5534614027489]}]],[[{"lng":[-92.1820796060006,-92.1813874852233,-92.1807878288242,-92.1801573357767,-92.1794958203765,-92.1786200949819,-92.1777204297096,-92.1770828522782,-92.1765113083415,-92.1760589507207,-92.1752736384239,-92.1746025315767,-92.1742124012438,-92.1732031425398,-92.1726131521704,-92.1719990015665,-92.1716227070407,-92.1712741120217],"lat":[41.5569848050007,41.5569817508157,41.5569783859538,41.5569655696711,41.5569614838503,41.5569584830878,41.5569623503914,41.5569513773962,41.5569697668258,41.5569788143339,41.5569768402662,41.5569761867138,41.5569680749164,41.5569777809515,41.5569673363466,41.5569744816966,41.5569879727547,41.5569913191977]}]],[[{"lng":[-92.1712368439524,-92.1712538955935,-92.1712768527368,-92.1712708607717,-92.1712741120217],"lat":[41.5548640536111,41.5551186955782,41.5554615533706,41.5562122595737,41.5569913191977]}]],[[{"lng":[-92.1712741120217,-92.1712748597794,-92.1712884722428,-92.1712944872048,-92.1713018514812],"lat":[41.5569913191977,41.5571704397222,41.5588151530402,41.5603668258842,41.5609317806962]}]],[[{"lng":[-92.1711597201043,-92.1711686882104,-92.1711983411712,-92.1712037729693,-92.1711968907963,-92.171236844177],"lat":[41.5446270953969,41.5468764247574,41.5484355232151,41.5495546008586,41.5519605772095,41.5548640426202]}]],[[{"lng":[-92.156689213448,-92.1567010326496,-92.1567209820761,-92.1567415489371,-92.1567438586854,-92.156723066437,-92.1567176143594,-92.1566748972893,-92.1565730429112,-92.1564989553463,-92.1564474976011,-92.1564201180965,-92.156398324833,-92.1564056658206,-92.1564184043805,-92.1564218489031,-92.1564189617177,-92.1564269430245,-92.1564330985278,-92.1564617290711,-92.1565093503364,-92.1565819647091,-92.1566701758115,-92.1567386741261,-92.1567921610533,-92.1568035296375],"lat":[41.5322166111687,41.5329659830813,41.5340334680653,41.5355770582813,41.5374894057817,41.5390858658212,41.5395045733143,41.5402856616031,41.5418754169307,41.5428941825949,41.5435878853156,41.5443929575623,41.5454361467925,41.5463487520378,41.5477613208565,41.5488603517301,41.5497569657987,41.5508917568503,41.5521138087231,41.5530187308456,41.5537731114287,41.5545952342847,41.5554294411055,41.5561959710686,41.5569226481464,41.5571539653757]}]],[[{"lng":[-92.1568035296375,-92.1568292259237,-92.1568543213493,-92.156850280525,-92.1568381166175,-92.1568410137516,-92.1568497875745,-92.1568800592949,-92.1568801250067,-92.1568921568619,-92.1568921566374],"lat":[41.5571539653757,41.5576769039823,41.5584984669922,41.5594506112476,41.5607914722052,41.5616643491027,41.563267310851,41.5653585229492,41.5664025435459,41.5678581435005,41.5678581544893]}]]],null,"network_geojson",{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"pane":"line","stroke":true,"color":["#4B0055","#3C3777","#006290","#008A98","#00AC8E","#25C771","#A6DA42","#FDE333"],"weight":2,"opacity":[0.9,0.9,0.9,0.9,0.9,0.9,0.9,0.9],"fill":false,"fillColor":["#4B0055","#3C3777","#006290","#008A98","#00AC8E","#25C771","#A6DA42","#FDE333"],"fillOpacity":[1,1,1,1,1,1,1,1],"smoothFactor":1,"noClip":false},["<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>1&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>52968114&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>2&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>52968327&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>3&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>52968853&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>4&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53033919&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>5&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53034396&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>6&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53034711&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>7&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53172262&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>8&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53172296&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>"],{"maxWidth":800,"minWidth":50,"autoPan":true,"keepInView":false,"closeButton":true,"closeOnClick":true,"className":""},["52968114","52968327","52968853","53033919","53034396","53034711","53172262","53172296"],{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},{"stroke":true,"weight":3,"opacity":1,"fill":false,"fillOpacity":0,"bringToFront":false,"sendToBack":false}]},{"method":"addScaleBar","args":[{"maxWidth":100,"metric":true,"imperial":true,"updateWhenIdle":true,"position":"bottomleft"}]},{"method":"addHomeButton","args":[-92.1820796060006,41.5322166111687,-92.1230040544226,41.5678581544893,true,"network_geojson","Zoom to network_geojson","<strong> network_geojson <\/strong>","bottomright"]},{"method":"addLayersControl","args":[["CartoDB.Positron","CartoDB.DarkMatter","OpenStreetMap","Esri.WorldImagery","OpenTopoMap"],"network_geojson",{"collapsed":true,"autoZIndex":true,"position":"topleft"}]},{"method":"addLegend","args":[{"colors":["#4B0055","#3C3777","#006290","#008A98","#00AC8E","#25C771","#A6DA42","#FDE333"],"labels":["52968114","52968327","52968853","53033919","53034396","53034711","53172262","53172296"],"na_color":null,"na_label":"NA","opacity":1,"position":"topright","type":"factor","title":"network_geojson","extra":null,"layerId":null,"className":"info legend","group":"network_geojson"}]}],"limits":{"lat":[41.5322166111687,41.5678581544893],"lng":[-92.1820796060006,-92.1230040544226]},"fitBounds":[41.5322166111687,-92.1820796060006,41.5678581544893,-92.1230040544226,[]]},"evals":[],"jsHooks":{"render":[{"code":"function(el, x, data) {\n  return (\n      function(el, x, data) {\n      // get the leaflet map\n      var map = this; //HTMLWidgets.find('#' + el.id);\n      // we need a new div element because we have to handle\n      // the mouseover output separately\n      // debugger;\n      function addElement () {\n      // generate new div Element\n      var newDiv = $(document.createElement('div'));\n      // append at end of leaflet htmlwidget container\n      $(el).append(newDiv);\n      //provide ID and style\n      newDiv.addClass('lnlt');\n      newDiv.css({\n      'position': 'relative',\n      'bottomleft':  '0px',\n      'background-color': 'rgba(255, 255, 255, 0.7)',\n      'box-shadow': '0 0 2px #bbb',\n      'background-clip': 'padding-box',\n      'margin': '0',\n      'padding-left': '5px',\n      'color': '#333',\n      'font': '9px/1.5 \"Helvetica Neue\", Arial, Helvetica, sans-serif',\n      'z-index': '700',\n      });\n      return newDiv;\n      }\n\n\n      // check for already existing lnlt class to not duplicate\n      var lnlt = $(el).find('.lnlt');\n\n      if(!lnlt.length) {\n      lnlt = addElement();\n\n      // grab the special div we generated in the beginning\n      // and put the mousmove output there\n\n      map.on('mousemove', function (e) {\n      if (e.originalEvent.ctrlKey) {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                           ' lon: ' + (e.latlng.lng).toFixed(5) +\n                           ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                           ' | zoom: ' + map.getZoom() +\n                           ' | x: ' + L.CRS.EPSG3857.project(e.latlng).x.toFixed(0) +\n                           ' | y: ' + L.CRS.EPSG3857.project(e.latlng).y.toFixed(0) +\n                           ' | epsg: 3857 ' +\n                           ' | proj4: +proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs ');\n      } else {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                      ' lon: ' + (e.latlng.lng).toFixed(5) +\n                      ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                      ' | zoom: ' + map.getZoom() + ' ');\n      }\n      });\n\n      // remove the lnlt div when mouse leaves map\n      map.on('mouseout', function (e) {\n      var strip = document.querySelector('.lnlt');\n      if( strip !==null) strip.remove();\n      });\n\n      };\n\n      //$(el).keypress(67, function(e) {\n      map.on('preclick', function(e) {\n      if (e.originalEvent.ctrlKey) {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                      ' lon: ' + (e.latlng.lng).toFixed(5) +\n                      ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                      ' | zoom: ' + map.getZoom() + ' ');\n      var txt = document.querySelector('.lnlt').textContent;\n      console.log(txt);\n      //txt.innerText.focus();\n      //txt.select();\n      setClipboardText('\"' + txt + '\"');\n      }\n      });\n\n      }\n      ).call(this.getMap(), el, x, data);\n}","data":null},{"code":"function(el, x, data) {\n  return (function(el,x,data){\n           var map = this;\n\n           map.on('keypress', function(e) {\n               console.log(e.originalEvent.code);\n               var key = e.originalEvent.code;\n               if (key === 'KeyE') {\n                   var bb = this.getBounds();\n                   var txt = JSON.stringify(bb);\n                   console.log(txt);\n\n                   setClipboardText('\\'' + txt + '\\'');\n               }\n           })\n        }).call(this.getMap(), el, x, data);\n}","data":null}]}}</script>
+]
+
+&lt;style&gt;
+.panel1-road-network-viz-auto {
+  color: black;
+  width: 38.6060606060606%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-road-network-viz-auto {
+  color: black;
+  width: 59.3939393939394%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-road-network-viz-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+class: top, left
+
+count: false
+ 
+## Import GPS data
+.panel1-read-gps-auto[
+
+```r
+*gps &lt;- read_csv(
+* here("data", "gps.csv"),
+* show_col_types = FALSE
+*) 
+
+gps
+```
+]
+ 
+.panel2-read-gps-auto[
+
+```
+## # A tibble: 38 x 4
+##    sequence speed_mph longitude latitude
+##       &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+##  1        1      5.90     -92.2     41.6
+##  2        2      5.50     -92.2     41.6
+##  3        3      5.21     -92.2     41.6
+##  4        4      9.37     -92.2     41.6
+##  5        5     13.4      -92.2     41.6
+##  6        6     12.1      -92.2     41.6
+##  7        7     13.0      -92.2     41.6
+##  8        8     13.4      -92.2     41.6
+##  9        9     11.6      -92.2     41.6
+## 10       10     10.6      -92.2     41.6
+## # ... with 28 more rows
+```
+]
+
+---
+count: false
+ 
+## Import GPS data
+.panel1-read-gps-auto[
+
+```r
+gps &lt;- read_csv(
+  here("data", "gps.csv"),
+  show_col_types = FALSE
+) %&gt;%
+* st_as_sf(
+*   coords = c("longitude", "latitude"),
+*   crs = 4326  # WGS 84
+* )
+
+gps
+```
+]
+ 
+.panel2-read-gps-auto[
+
+```
+## Simple feature collection with 38 features and 2 fields
+## Geometry type: POINT
+## Dimension:     XY
+## Bounding box:  xmin: -92.16488 ymin: 41.55675 xmax: -92.15668 ymax: 41.56208
+## Geodetic CRS:  WGS 84
+## # A tibble: 38 x 3
+##    sequence speed_mph             geometry
+##  *    &lt;dbl&gt;     &lt;dbl&gt;          &lt;POINT [°]&gt;
+##  1        1      5.90   (-92.16488 41.557)
+##  2        2      5.50 (-92.16471 41.55698)
+##  3        3      5.21 (-92.16432 41.55699)
+##  4        4      9.37 (-92.16412 41.55698)
+##  5        5     13.4  (-92.16378 41.55697)
+##  6        6     12.1  (-92.16342 41.55698)
+##  7        7     13.0  (-92.16302 41.55699)
+##  8        8     13.4  (-92.16263 41.55701)
+##  9        9     11.6     (-92.1623 41.557)
+## 10       10     10.6  (-92.16199 41.55698)
+## # ... with 28 more rows
+```
+]
+
+---
+count: false
+ 
+## Import GPS data
+.panel1-read-gps-auto[
+
+```r
+gps &lt;- read_csv(
+  here("data", "gps.csv"),
+  show_col_types = FALSE
+) %&gt;%
+  st_as_sf(
+    coords = c("longitude", "latitude"),
+    crs = 4326  # WGS 84
+  ) %&gt;%
+* st_transform(26915)  # NAD83 / UTM zone 15N
+
+gps
+```
+]
+ 
+.panel2-read-gps-auto[
+
+```
+## Simple feature collection with 38 features and 2 fields
+## Geometry type: POINT
+## Dimension:     XY
+## Bounding box:  xmin: 569640.7 ymin: 4600905 xmax: 570320 ymax: 4601499
+## Projected CRS: NAD83 / UTM zone 15N
+## # A tibble: 38 x 3
+##    sequence speed_mph           geometry
+##  *    &lt;dbl&gt;     &lt;dbl&gt;        &lt;POINT [m]&gt;
+##  1        1      5.90 (569640.7 4600930)
+##  2        2      5.50 (569654.5 4600928)
+##  3        3      5.21   (569687 4600928)
+##  4        4      9.37 (569703.7 4600927)
+##  5        5     13.4  (569732.3 4600927)
+##  6        6     12.1  (569762.1 4600928)
+##  7        7     13.0    (569796 4600930)
+##  8        8     13.4  (569828.1 4600932)
+##  9        9     11.6  (569855.7 4600931)
+## 10       10     10.6  (569881.7 4600929)
+## # ... with 28 more rows
+```
+]
+
+&lt;style&gt;
+.panel1-read-gps-auto {
+  color: black;
+  width: 38.6060606060606%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-read-gps-auto {
+  color: black;
+  width: 59.3939393939394%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-read-gps-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+class: top, left
+
+count: false
+ 
+## Visualize GPS data
+.panel1-gps-viz-auto[
+
+```r
+*mapview(network_geojson)
+```
+]
+ 
+.panel2-gps-viz-auto[
+<div id="htmlwidget-b2d53e9213736bba7795" style="width:100%;height:504px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-b2d53e9213736bba7795">{"x":{"options":{"minZoom":1,"maxZoom":52,"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"preferCanvas":false,"bounceAtZoomLimits":false,"maxBounds":[[[-90,-370]],[[90,370]]]},"calls":[{"method":"addProviderTiles","args":["CartoDB.Positron","CartoDB.Positron","CartoDB.Positron",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["CartoDB.DarkMatter","CartoDB.DarkMatter","CartoDB.DarkMatter",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["OpenStreetMap","OpenStreetMap","OpenStreetMap",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["Esri.WorldImagery","Esri.WorldImagery","Esri.WorldImagery",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["OpenTopoMap","OpenTopoMap","OpenTopoMap",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"createMapPane","args":["line",430]},{"method":"addPolylines","args":[[[[{"lng":[-92.1712741120217,-92.170613444721,-92.1701565480703,-92.1698806981515,-92.1693903450506,-92.168942519655,-92.1680712583933,-92.1676193407,-92.1673436392502,-92.166986599102,-92.1665674745204,-92.1659148836355,-92.1655719696523,-92.164610515425,-92.1636584299075,-92.1623782256146,-92.1613500767776,-92.1607597921649,-92.1605025299164,-92.1601830361131,-92.1596740924897,-92.1591173398082,-92.1587269901966,-92.1582787135323,-92.1576305775501,-92.1573449154008,-92.1569878738826,-92.1568035296375],"lat":[41.5569913191977,41.5569976552595,41.5569959017096,41.5569855318906,41.5569905335234,41.5570103309776,41.557021603111,41.5570091701118,41.556991647167,41.5569946206027,41.5570075940414,41.5570321341695,41.5570424194175,41.557041883821,41.5570486008671,41.5570407337783,41.5570429622738,41.5570467546886,41.557058031101,41.557086453261,41.5570697423609,41.5570631936708,41.5570657510083,41.5571069518458,41.5571457972195,41.5571495827718,41.5571525254301,41.5571539653757]}]],[[{"lng":[-92.1568035296375,-92.1564404140257,-92.1560502102331,-92.1557174823142,-92.155417843502,-92.1547663666628,-92.1544241237211,-92.1540531810434,-92.1536203018399,-92.1530348491979,-92.1524731894018,-92.1516403657036,-92.1512688241191,-92.1507549733586,-92.1499173945183,-92.1488987611757,-92.1479088312972,-92.146904475643,-92.1460237674956,-92.1455474588356,-92.144914119229,-92.1445471067929,-92.1442138577614,-92.1437810555436,-92.1430484640008,-92.1423300750922,-92.1414254950471,-92.1408017473143,-92.140573336954,-92.1403786908292,-92.1402558743313,-92.1401430302336,-92.140016666109,-92.1398533691215,-92.139652911593,-92.1394613682267,-92.1392607596016,-92.1391169550002,-92.1389470187216,-92.1387720246809,-92.1386208976871,-92.1383697826999,-92.138314799943,-92.1383126676794,-92.1380473598498,-92.1378224422516,-92.1376116484828,-92.1374336353617,-92.137236815269,-92.1370674849714,-92.1369260248831,-92.1367695326787,-92.1365697595991,-92.1362509550955,-92.1356989930172,-92.1349948439105,-92.1344713555969,-92.1336577658845,-92.1326963676672,-92.1315064172232,-92.1305255274282,-92.1292592157383,-92.1279700264959,-92.1271753967607,-92.1262187529668,-92.1251809142948,-92.1245713204625,-92.1240053165933,-92.1234725431358,-92.1231607385969,-92.1230040544226],"lat":[41.5571539653757,41.5571567978932,41.557152197428,41.5571303995198,41.5571197146434,41.5570905765998,41.5570686609677,41.5570535557431,41.5570412920449,41.5570415255187,41.5570420351008,41.5570357620963,41.5570492416972,41.5570395838028,41.557033241376,41.557035470275,41.5570308818505,41.5570332623152,41.5570406788927,41.5570564717864,41.5570703935764,41.5570946309869,41.5570978176916,41.5570819415051,41.5570624964932,41.5570467925338,41.5570574641463,41.5570679030731,41.5570651789449,41.5570414048578,41.5569970389812,41.5569313396773,41.556829728615,41.5566740473227,41.5564750231975,41.5563047044861,41.5561128271392,41.5559359284865,41.5556443134499,41.5553669374178,41.5550862696334,41.5545827508384,41.5544819889278,41.5544805383351,41.5543000377887,41.5541328933737,41.5539730666371,41.5538386580843,41.5536932990473,41.553598319546,41.5535358512795,41.553508952842,41.5535029886923,41.5534991743057,41.5534925681469,41.5534805617294,41.5534778655833,41.5534645395676,41.5534637348091,41.553467328719,41.5534877216995,41.5535010993555,41.5534712866985,41.5534617175769,41.5534609154402,41.5534734255558,41.5534910969781,41.5534735393665,41.5534599546877,41.5534577810582,41.5534614027489]}]],[[{"lng":[-92.1820796060006,-92.1813874852233,-92.1807878288242,-92.1801573357767,-92.1794958203765,-92.1786200949819,-92.1777204297096,-92.1770828522782,-92.1765113083415,-92.1760589507207,-92.1752736384239,-92.1746025315767,-92.1742124012438,-92.1732031425398,-92.1726131521704,-92.1719990015665,-92.1716227070407,-92.1712741120217],"lat":[41.5569848050007,41.5569817508157,41.5569783859538,41.5569655696711,41.5569614838503,41.5569584830878,41.5569623503914,41.5569513773962,41.5569697668258,41.5569788143339,41.5569768402662,41.5569761867138,41.5569680749164,41.5569777809515,41.5569673363466,41.5569744816966,41.5569879727547,41.5569913191977]}]],[[{"lng":[-92.1712368439524,-92.1712538955935,-92.1712768527368,-92.1712708607717,-92.1712741120217],"lat":[41.5548640536111,41.5551186955782,41.5554615533706,41.5562122595737,41.5569913191977]}]],[[{"lng":[-92.1712741120217,-92.1712748597794,-92.1712884722428,-92.1712944872048,-92.1713018514812],"lat":[41.5569913191977,41.5571704397222,41.5588151530402,41.5603668258842,41.5609317806962]}]],[[{"lng":[-92.1711597201043,-92.1711686882104,-92.1711983411712,-92.1712037729693,-92.1711968907963,-92.171236844177],"lat":[41.5446270953969,41.5468764247574,41.5484355232151,41.5495546008586,41.5519605772095,41.5548640426202]}]],[[{"lng":[-92.156689213448,-92.1567010326496,-92.1567209820761,-92.1567415489371,-92.1567438586854,-92.156723066437,-92.1567176143594,-92.1566748972893,-92.1565730429112,-92.1564989553463,-92.1564474976011,-92.1564201180965,-92.156398324833,-92.1564056658206,-92.1564184043805,-92.1564218489031,-92.1564189617177,-92.1564269430245,-92.1564330985278,-92.1564617290711,-92.1565093503364,-92.1565819647091,-92.1566701758115,-92.1567386741261,-92.1567921610533,-92.1568035296375],"lat":[41.5322166111687,41.5329659830813,41.5340334680653,41.5355770582813,41.5374894057817,41.5390858658212,41.5395045733143,41.5402856616031,41.5418754169307,41.5428941825949,41.5435878853156,41.5443929575623,41.5454361467925,41.5463487520378,41.5477613208565,41.5488603517301,41.5497569657987,41.5508917568503,41.5521138087231,41.5530187308456,41.5537731114287,41.5545952342847,41.5554294411055,41.5561959710686,41.5569226481464,41.5571539653757]}]],[[{"lng":[-92.1568035296375,-92.1568292259237,-92.1568543213493,-92.156850280525,-92.1568381166175,-92.1568410137516,-92.1568497875745,-92.1568800592949,-92.1568801250067,-92.1568921568619,-92.1568921566374],"lat":[41.5571539653757,41.5576769039823,41.5584984669922,41.5594506112476,41.5607914722052,41.5616643491027,41.563267310851,41.5653585229492,41.5664025435459,41.5678581435005,41.5678581544893]}]]],null,"network_geojson",{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"pane":"line","stroke":true,"color":["#4B0055","#3C3777","#006290","#008A98","#00AC8E","#25C771","#A6DA42","#FDE333"],"weight":2,"opacity":[0.9,0.9,0.9,0.9,0.9,0.9,0.9,0.9],"fill":false,"fillColor":["#4B0055","#3C3777","#006290","#008A98","#00AC8E","#25C771","#A6DA42","#FDE333"],"fillOpacity":[1,1,1,1,1,1,1,1],"smoothFactor":1,"noClip":false},["<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>1&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>52968114&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>2&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>52968327&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>3&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>52968853&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>4&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53033919&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>5&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53034396&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>6&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53034711&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>7&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53172262&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>8&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53172296&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>"],{"maxWidth":800,"minWidth":50,"autoPan":true,"keepInView":false,"closeButton":true,"closeOnClick":true,"className":""},["52968114","52968327","52968853","53033919","53034396","53034711","53172262","53172296"],{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},{"stroke":true,"weight":3,"opacity":1,"fill":false,"fillOpacity":0,"bringToFront":false,"sendToBack":false}]},{"method":"addScaleBar","args":[{"maxWidth":100,"metric":true,"imperial":true,"updateWhenIdle":true,"position":"bottomleft"}]},{"method":"addHomeButton","args":[-92.1820796060006,41.5322166111687,-92.1230040544226,41.5678581544893,true,"network_geojson","Zoom to network_geojson","<strong> network_geojson <\/strong>","bottomright"]},{"method":"addLayersControl","args":[["CartoDB.Positron","CartoDB.DarkMatter","OpenStreetMap","Esri.WorldImagery","OpenTopoMap"],"network_geojson",{"collapsed":true,"autoZIndex":true,"position":"topleft"}]},{"method":"addLegend","args":[{"colors":["#4B0055","#3C3777","#006290","#008A98","#00AC8E","#25C771","#A6DA42","#FDE333"],"labels":["52968114","52968327","52968853","53033919","53034396","53034711","53172262","53172296"],"na_color":null,"na_label":"NA","opacity":1,"position":"topright","type":"factor","title":"network_geojson","extra":null,"layerId":null,"className":"info legend","group":"network_geojson"}]}],"limits":{"lat":[41.5322166111687,41.5678581544893],"lng":[-92.1820796060006,-92.1230040544226]},"fitBounds":[41.5322166111687,-92.1820796060006,41.5678581544893,-92.1230040544226,[]]},"evals":[],"jsHooks":{"render":[{"code":"function(el, x, data) {\n  return (\n      function(el, x, data) {\n      // get the leaflet map\n      var map = this; //HTMLWidgets.find('#' + el.id);\n      // we need a new div element because we have to handle\n      // the mouseover output separately\n      // debugger;\n      function addElement () {\n      // generate new div Element\n      var newDiv = $(document.createElement('div'));\n      // append at end of leaflet htmlwidget container\n      $(el).append(newDiv);\n      //provide ID and style\n      newDiv.addClass('lnlt');\n      newDiv.css({\n      'position': 'relative',\n      'bottomleft':  '0px',\n      'background-color': 'rgba(255, 255, 255, 0.7)',\n      'box-shadow': '0 0 2px #bbb',\n      'background-clip': 'padding-box',\n      'margin': '0',\n      'padding-left': '5px',\n      'color': '#333',\n      'font': '9px/1.5 \"Helvetica Neue\", Arial, Helvetica, sans-serif',\n      'z-index': '700',\n      });\n      return newDiv;\n      }\n\n\n      // check for already existing lnlt class to not duplicate\n      var lnlt = $(el).find('.lnlt');\n\n      if(!lnlt.length) {\n      lnlt = addElement();\n\n      // grab the special div we generated in the beginning\n      // and put the mousmove output there\n\n      map.on('mousemove', function (e) {\n      if (e.originalEvent.ctrlKey) {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                           ' lon: ' + (e.latlng.lng).toFixed(5) +\n                           ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                           ' | zoom: ' + map.getZoom() +\n                           ' | x: ' + L.CRS.EPSG3857.project(e.latlng).x.toFixed(0) +\n                           ' | y: ' + L.CRS.EPSG3857.project(e.latlng).y.toFixed(0) +\n                           ' | epsg: 3857 ' +\n                           ' | proj4: +proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs ');\n      } else {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                      ' lon: ' + (e.latlng.lng).toFixed(5) +\n                      ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                      ' | zoom: ' + map.getZoom() + ' ');\n      }\n      });\n\n      // remove the lnlt div when mouse leaves map\n      map.on('mouseout', function (e) {\n      var strip = document.querySelector('.lnlt');\n      if( strip !==null) strip.remove();\n      });\n\n      };\n\n      //$(el).keypress(67, function(e) {\n      map.on('preclick', function(e) {\n      if (e.originalEvent.ctrlKey) {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                      ' lon: ' + (e.latlng.lng).toFixed(5) +\n                      ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                      ' | zoom: ' + map.getZoom() + ' ');\n      var txt = document.querySelector('.lnlt').textContent;\n      console.log(txt);\n      //txt.innerText.focus();\n      //txt.select();\n      setClipboardText('\"' + txt + '\"');\n      }\n      });\n\n      }\n      ).call(this.getMap(), el, x, data);\n}","data":null},{"code":"function(el, x, data) {\n  return (function(el,x,data){\n           var map = this;\n\n           map.on('keypress', function(e) {\n               console.log(e.originalEvent.code);\n               var key = e.originalEvent.code;\n               if (key === 'KeyE') {\n                   var bb = this.getBounds();\n                   var txt = JSON.stringify(bb);\n                   console.log(txt);\n\n                   setClipboardText('\\'' + txt + '\\'');\n               }\n           })\n        }).call(this.getMap(), el, x, data);\n}","data":null}]}}</script>
+]
+
+---
+count: false
+ 
+## Visualize GPS data
+.panel1-gps-viz-auto[
+
+```r
+mapview(network_geojson) +
+* mapview(gps)
+```
+]
+ 
+.panel2-gps-viz-auto[
+<div id="htmlwidget-8fe657a0fca9239bc301" style="width:100%;height:504px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-8fe657a0fca9239bc301">{"x":{"options":{"minZoom":1,"maxZoom":52,"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"preferCanvas":false,"bounceAtZoomLimits":false,"maxBounds":[[[-90,-370]],[[90,370]]]},"calls":[{"method":"addProviderTiles","args":["CartoDB.Positron","CartoDB.Positron","CartoDB.Positron",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["CartoDB.DarkMatter","CartoDB.DarkMatter","CartoDB.DarkMatter",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["OpenStreetMap","OpenStreetMap","OpenStreetMap",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["Esri.WorldImagery","Esri.WorldImagery","Esri.WorldImagery",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["OpenTopoMap","OpenTopoMap","OpenTopoMap",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"createMapPane","args":["line",430]},{"method":"addPolylines","args":[[[[{"lng":[-92.1712741120217,-92.170613444721,-92.1701565480703,-92.1698806981515,-92.1693903450506,-92.168942519655,-92.1680712583933,-92.1676193407,-92.1673436392502,-92.166986599102,-92.1665674745204,-92.1659148836355,-92.1655719696523,-92.164610515425,-92.1636584299075,-92.1623782256146,-92.1613500767776,-92.1607597921649,-92.1605025299164,-92.1601830361131,-92.1596740924897,-92.1591173398082,-92.1587269901966,-92.1582787135323,-92.1576305775501,-92.1573449154008,-92.1569878738826,-92.1568035296375],"lat":[41.5569913191977,41.5569976552595,41.5569959017096,41.5569855318906,41.5569905335234,41.5570103309776,41.557021603111,41.5570091701118,41.556991647167,41.5569946206027,41.5570075940414,41.5570321341695,41.5570424194175,41.557041883821,41.5570486008671,41.5570407337783,41.5570429622738,41.5570467546886,41.557058031101,41.557086453261,41.5570697423609,41.5570631936708,41.5570657510083,41.5571069518458,41.5571457972195,41.5571495827718,41.5571525254301,41.5571539653757]}]],[[{"lng":[-92.1568035296375,-92.1564404140257,-92.1560502102331,-92.1557174823142,-92.155417843502,-92.1547663666628,-92.1544241237211,-92.1540531810434,-92.1536203018399,-92.1530348491979,-92.1524731894018,-92.1516403657036,-92.1512688241191,-92.1507549733586,-92.1499173945183,-92.1488987611757,-92.1479088312972,-92.146904475643,-92.1460237674956,-92.1455474588356,-92.144914119229,-92.1445471067929,-92.1442138577614,-92.1437810555436,-92.1430484640008,-92.1423300750922,-92.1414254950471,-92.1408017473143,-92.140573336954,-92.1403786908292,-92.1402558743313,-92.1401430302336,-92.140016666109,-92.1398533691215,-92.139652911593,-92.1394613682267,-92.1392607596016,-92.1391169550002,-92.1389470187216,-92.1387720246809,-92.1386208976871,-92.1383697826999,-92.138314799943,-92.1383126676794,-92.1380473598498,-92.1378224422516,-92.1376116484828,-92.1374336353617,-92.137236815269,-92.1370674849714,-92.1369260248831,-92.1367695326787,-92.1365697595991,-92.1362509550955,-92.1356989930172,-92.1349948439105,-92.1344713555969,-92.1336577658845,-92.1326963676672,-92.1315064172232,-92.1305255274282,-92.1292592157383,-92.1279700264959,-92.1271753967607,-92.1262187529668,-92.1251809142948,-92.1245713204625,-92.1240053165933,-92.1234725431358,-92.1231607385969,-92.1230040544226],"lat":[41.5571539653757,41.5571567978932,41.557152197428,41.5571303995198,41.5571197146434,41.5570905765998,41.5570686609677,41.5570535557431,41.5570412920449,41.5570415255187,41.5570420351008,41.5570357620963,41.5570492416972,41.5570395838028,41.557033241376,41.557035470275,41.5570308818505,41.5570332623152,41.5570406788927,41.5570564717864,41.5570703935764,41.5570946309869,41.5570978176916,41.5570819415051,41.5570624964932,41.5570467925338,41.5570574641463,41.5570679030731,41.5570651789449,41.5570414048578,41.5569970389812,41.5569313396773,41.556829728615,41.5566740473227,41.5564750231975,41.5563047044861,41.5561128271392,41.5559359284865,41.5556443134499,41.5553669374178,41.5550862696334,41.5545827508384,41.5544819889278,41.5544805383351,41.5543000377887,41.5541328933737,41.5539730666371,41.5538386580843,41.5536932990473,41.553598319546,41.5535358512795,41.553508952842,41.5535029886923,41.5534991743057,41.5534925681469,41.5534805617294,41.5534778655833,41.5534645395676,41.5534637348091,41.553467328719,41.5534877216995,41.5535010993555,41.5534712866985,41.5534617175769,41.5534609154402,41.5534734255558,41.5534910969781,41.5534735393665,41.5534599546877,41.5534577810582,41.5534614027489]}]],[[{"lng":[-92.1820796060006,-92.1813874852233,-92.1807878288242,-92.1801573357767,-92.1794958203765,-92.1786200949819,-92.1777204297096,-92.1770828522782,-92.1765113083415,-92.1760589507207,-92.1752736384239,-92.1746025315767,-92.1742124012438,-92.1732031425398,-92.1726131521704,-92.1719990015665,-92.1716227070407,-92.1712741120217],"lat":[41.5569848050007,41.5569817508157,41.5569783859538,41.5569655696711,41.5569614838503,41.5569584830878,41.5569623503914,41.5569513773962,41.5569697668258,41.5569788143339,41.5569768402662,41.5569761867138,41.5569680749164,41.5569777809515,41.5569673363466,41.5569744816966,41.5569879727547,41.5569913191977]}]],[[{"lng":[-92.1712368439524,-92.1712538955935,-92.1712768527368,-92.1712708607717,-92.1712741120217],"lat":[41.5548640536111,41.5551186955782,41.5554615533706,41.5562122595737,41.5569913191977]}]],[[{"lng":[-92.1712741120217,-92.1712748597794,-92.1712884722428,-92.1712944872048,-92.1713018514812],"lat":[41.5569913191977,41.5571704397222,41.5588151530402,41.5603668258842,41.5609317806962]}]],[[{"lng":[-92.1711597201043,-92.1711686882104,-92.1711983411712,-92.1712037729693,-92.1711968907963,-92.171236844177],"lat":[41.5446270953969,41.5468764247574,41.5484355232151,41.5495546008586,41.5519605772095,41.5548640426202]}]],[[{"lng":[-92.156689213448,-92.1567010326496,-92.1567209820761,-92.1567415489371,-92.1567438586854,-92.156723066437,-92.1567176143594,-92.1566748972893,-92.1565730429112,-92.1564989553463,-92.1564474976011,-92.1564201180965,-92.156398324833,-92.1564056658206,-92.1564184043805,-92.1564218489031,-92.1564189617177,-92.1564269430245,-92.1564330985278,-92.1564617290711,-92.1565093503364,-92.1565819647091,-92.1566701758115,-92.1567386741261,-92.1567921610533,-92.1568035296375],"lat":[41.5322166111687,41.5329659830813,41.5340334680653,41.5355770582813,41.5374894057817,41.5390858658212,41.5395045733143,41.5402856616031,41.5418754169307,41.5428941825949,41.5435878853156,41.5443929575623,41.5454361467925,41.5463487520378,41.5477613208565,41.5488603517301,41.5497569657987,41.5508917568503,41.5521138087231,41.5530187308456,41.5537731114287,41.5545952342847,41.5554294411055,41.5561959710686,41.5569226481464,41.5571539653757]}]],[[{"lng":[-92.1568035296375,-92.1568292259237,-92.1568543213493,-92.156850280525,-92.1568381166175,-92.1568410137516,-92.1568497875745,-92.1568800592949,-92.1568801250067,-92.1568921568619,-92.1568921566374],"lat":[41.5571539653757,41.5576769039823,41.5584984669922,41.5594506112476,41.5607914722052,41.5616643491027,41.563267310851,41.5653585229492,41.5664025435459,41.5678581435005,41.5678581544893]}]]],null,"network_geojson",{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"pane":"line","stroke":true,"color":["#4B0055","#3C3777","#006290","#008A98","#00AC8E","#25C771","#A6DA42","#FDE333"],"weight":2,"opacity":[0.9,0.9,0.9,0.9,0.9,0.9,0.9,0.9],"fill":false,"fillColor":["#4B0055","#3C3777","#006290","#008A98","#00AC8E","#25C771","#A6DA42","#FDE333"],"fillOpacity":[1,1,1,1,1,1,1,1],"smoothFactor":1,"noClip":false},["<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>1&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>52968114&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>2&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>52968327&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>3&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>52968853&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>4&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53033919&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>5&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53034396&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>6&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53034711&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>7&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53172262&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>8&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53172296&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>"],{"maxWidth":800,"minWidth":50,"autoPan":true,"keepInView":false,"closeButton":true,"closeOnClick":true,"className":""},["52968114","52968327","52968853","53033919","53034396","53034711","53172262","53172296"],{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},{"stroke":true,"weight":3,"opacity":1,"fill":false,"fillOpacity":0,"bringToFront":false,"sendToBack":false}]},{"method":"addScaleBar","args":[{"maxWidth":100,"metric":true,"imperial":true,"updateWhenIdle":true,"position":"bottomleft"}]},{"method":"addHomeButton","args":[-92.1820796060006,41.5322166111687,-92.1230040544226,41.5678581544893,true,"network_geojson","Zoom to network_geojson","<strong> network_geojson <\/strong>","bottomright"]},{"method":"addLegend","args":[{"colors":["#4B0055","#3C3777","#006290","#008A98","#00AC8E","#25C771","#A6DA42","#FDE333"],"labels":["52968114","52968327","52968853","53033919","53034396","53034711","53172262","53172296"],"na_color":null,"na_label":"NA","opacity":1,"position":"topright","type":"factor","title":"network_geojson","extra":null,"layerId":null,"className":"info legend","group":"network_geojson"}]},{"method":"createMapPane","args":["point",440]},{"method":"addCircleMarkers","args":[[41.557005,41.556985,41.556986667,41.556978333,41.556973333,41.556978333,41.556993333,41.557013333,41.557001667,41.556976667,41.55693,41.55692,41.556896667,41.556863333,41.556838333,41.556801667,41.556768333,41.556761667,41.556745,41.556946667,41.557025,41.557043333,41.557086667,41.557108333,41.557253333,41.558391667,41.558751667,41.559073333,41.559443333,41.55982,41.560205,41.560533333,41.560941667,41.561328333,41.56167,41.56191,41.562051667,41.562076667],[-92.16487833,-92.16471333,-92.16432333,-92.16412333,-92.16378,-92.16342333,-92.16301667,-92.16263167,-92.1623,-92.16198833,-92.16170333,-92.16139333,-92.16113667,-92.16087167,-92.16057667,-92.16029167,-92.15986667,-92.15940667,-92.15901,-92.15850167,-92.15804667,-92.15770167,-92.15737833,-92.157215,-92.15715,-92.156735,-92.15673667,-92.156705,-92.15674167,-92.156765,-92.15680167,-92.15681167,-92.15677,-92.15672,-92.15668333,-92.15672833,-92.15682167,-92.156845],6,null,"gps",{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"pane":"point","stroke":true,"color":"#333333","weight":1,"opacity":0.9,"fill":true,"fillColor":"#6666FF","fillOpacity":0.6},null,null,["<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>1&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td> 5.9035014&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>2&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td> 5.5007284&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>3&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td> 3&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td> 5.2130334&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>4&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td> 4&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td> 9.3673492&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>5&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td> 5&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>13.4296026&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>6&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td> 6&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>12.1407290&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>7&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td> 7&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>12.9692906&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>8&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td> 8&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>13.3950792&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>9&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td> 9&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>11.6113702&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>10&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>10&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>10.6332072&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>11&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>11&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td> 9.3788570&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>12&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>12&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td> 9.2983024&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>13&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>13&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td> 7.8253040&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>14&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>14&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td> 9.7355988&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>15&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>15&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>10.4490824&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>16&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>16&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>10.7713008&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>17&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>17&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>13.5101572&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>18&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>18&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>15.1212492&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>19&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>19&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>12.5665176&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>20&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>20&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>11.3812142&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>21&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>21&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>10.1153562&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>22&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>22&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td> 6.1336574&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>23&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>23&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td> 5.0634320&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>24&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>24&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td> 5.3511270&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>25&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>25&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td> 8.0899834&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>26&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>26&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>16.6748022&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>27&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>27&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>15.0982336&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>28&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>28&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>16.3295682&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>29&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>29&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>16.7783724&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>30&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>30&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>16.7093256&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>31&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>31&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>18.0442304&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>32&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>32&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>15.3283896&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>33&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>33&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>16.1684590&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>34&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>34&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>16.6863100&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>35&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>35&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td>13.5446806&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>36&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>36&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td> 8.1129990&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>37&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>37&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td> 4.5340732&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>38&emsp;<\/td><\/tr><tr><td>1<\/td><th>sequence&emsp;<\/th><td>38&emsp;<\/td><\/tr><tr><td>2<\/td><th>speed_mph&emsp;<\/th><td> 0.0460312&emsp;<\/td><\/tr><tr><td>3<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>"],{"maxWidth":800,"minWidth":50,"autoPan":true,"keepInView":false,"closeButton":true,"closeOnClick":true,"className":""},["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38"],{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addHomeButton","args":[-92.16487833,41.556745,-92.15668333,41.562076667,true,"gps","Zoom to gps","<strong> gps <\/strong>","bottomright"]},{"method":"addLayersControl","args":[["CartoDB.Positron","CartoDB.DarkMatter","OpenStreetMap","Esri.WorldImagery","OpenTopoMap"],["network_geojson","gps"],{"collapsed":true,"autoZIndex":true,"position":"topleft"}]},{"method":"addLegend","args":[{"colors":["#6666FF"],"labels":["gps"],"na_color":null,"na_label":"NA","opacity":1,"position":"topright","type":"factor","title":"","extra":null,"layerId":null,"className":"info legend","group":"gps"}]},{"method":"addHomeButton","args":[-92.1820796060006,41.5322166111687,-92.1230040544226,41.5678581544893,true,null,"Zoom to full extent","<strong>Zoom full<\/strong>","bottomleft"]}],"limits":{"lat":[41.5322166111687,41.5678581544893],"lng":[-92.1820796060006,-92.1230040544226]},"fitBounds":[41.5322166111687,-92.1820796060006,41.5678581544893,-92.1230040544226,[]]},"evals":[],"jsHooks":{"render":[{"code":"function(el, x, data) {\n  return (\n      function(el, x, data) {\n      // get the leaflet map\n      var map = this; //HTMLWidgets.find('#' + el.id);\n      // we need a new div element because we have to handle\n      // the mouseover output separately\n      // debugger;\n      function addElement () {\n      // generate new div Element\n      var newDiv = $(document.createElement('div'));\n      // append at end of leaflet htmlwidget container\n      $(el).append(newDiv);\n      //provide ID and style\n      newDiv.addClass('lnlt');\n      newDiv.css({\n      'position': 'relative',\n      'bottomleft':  '0px',\n      'background-color': 'rgba(255, 255, 255, 0.7)',\n      'box-shadow': '0 0 2px #bbb',\n      'background-clip': 'padding-box',\n      'margin': '0',\n      'padding-left': '5px',\n      'color': '#333',\n      'font': '9px/1.5 \"Helvetica Neue\", Arial, Helvetica, sans-serif',\n      'z-index': '700',\n      });\n      return newDiv;\n      }\n\n\n      // check for already existing lnlt class to not duplicate\n      var lnlt = $(el).find('.lnlt');\n\n      if(!lnlt.length) {\n      lnlt = addElement();\n\n      // grab the special div we generated in the beginning\n      // and put the mousmove output there\n\n      map.on('mousemove', function (e) {\n      if (e.originalEvent.ctrlKey) {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                           ' lon: ' + (e.latlng.lng).toFixed(5) +\n                           ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                           ' | zoom: ' + map.getZoom() +\n                           ' | x: ' + L.CRS.EPSG3857.project(e.latlng).x.toFixed(0) +\n                           ' | y: ' + L.CRS.EPSG3857.project(e.latlng).y.toFixed(0) +\n                           ' | epsg: 3857 ' +\n                           ' | proj4: +proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs ');\n      } else {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                      ' lon: ' + (e.latlng.lng).toFixed(5) +\n                      ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                      ' | zoom: ' + map.getZoom() + ' ');\n      }\n      });\n\n      // remove the lnlt div when mouse leaves map\n      map.on('mouseout', function (e) {\n      var strip = document.querySelector('.lnlt');\n      if( strip !==null) strip.remove();\n      });\n\n      };\n\n      //$(el).keypress(67, function(e) {\n      map.on('preclick', function(e) {\n      if (e.originalEvent.ctrlKey) {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                      ' lon: ' + (e.latlng.lng).toFixed(5) +\n                      ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                      ' | zoom: ' + map.getZoom() + ' ');\n      var txt = document.querySelector('.lnlt').textContent;\n      console.log(txt);\n      //txt.innerText.focus();\n      //txt.select();\n      setClipboardText('\"' + txt + '\"');\n      }\n      });\n\n      }\n      ).call(this.getMap(), el, x, data);\n}","data":null},{"code":"function(el, x, data) {\n  return (function(el,x,data){\n           var map = this;\n\n           map.on('keypress', function(e) {\n               console.log(e.originalEvent.code);\n               var key = e.originalEvent.code;\n               if (key === 'KeyE') {\n                   var bb = this.getBounds();\n                   var txt = JSON.stringify(bb);\n                   console.log(txt);\n\n                   setClipboardText('\\'' + txt + '\\'');\n               }\n           })\n        }).call(this.getMap(), el, x, data);\n}","data":null}]}}</script>
+]
+
+&lt;style&gt;
+.panel1-gps-viz-auto {
+  color: black;
+  width: 38.6060606060606%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-gps-viz-auto {
+  color: black;
+  width: 59.3939393939394%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-gps-viz-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+class: middle, center
+
+# Hello, mapmatchr!
+
+---
+
+class: middle, center
+
+# Helper functions
+
+---
+
+count: false
+ 
+## Helper function 1: Transform network
+.panel1-transform-network-demo-user[
+
+```r
+*reveal &lt;- args(.transform_network)
+
+reveal
+```
+]
+ 
+.panel2-transform-network-demo-user[
+
+```
+## function (network, output = "network") 
+## NULL
+```
+]
+
+---
+count: false
+ 
+## Helper function 1: Transform network
+.panel1-transform-network-demo-user[
+
+```r
+reveal &lt;- args(.transform_network)
+
+*reveal &lt;- network_geojson
+
+reveal
+```
+]
+ 
+.panel2-transform-network-demo-user[
+
+```
+## Simple feature collection with 8 features and 1 field
+## Geometry type: MULTILINESTRING
+## Dimension:     XY
+## Bounding box:  xmin: 568206.3 ymin: 4598184 xmax: 573136.6 ymax: 4602141
+## Projected CRS: NAD83 / UTM zone 15N
+## # A tibble: 8 x 2
+##   road_id                                                               geometry
+##   &lt;chr&gt;                                                    &lt;MULTILINESTRING [m]&gt;
+## 1 52968114 ((569107.4 4600923, 569162.5 4600924, 569200.6 4600924, 569223.6 460~
+## 2 52968327 ((570313.9 4600953, 570344.2 4600953, 570376.7 4600953, 570404.5 460~
+## 3 52968853 ((568206.3 4600914, 568264 4600914, 568314 4600914, 568366.6 4600913~
+## 4 53033919 ((569112.8 4600687, 569111.1 4600715, 569108.8 4600753, 569108.5 460~
+## 5 53034396 ((569107.4 4600923, 569107.1 4600943, 569104.2 4601125, 569102.1 460~
+## 6 53034711 ((569130.1 4599550, 569126.9 4599800, 569122.8 4599973, 569121.2 460~
+## 7 53172262 ((570350.5 4598184, 570348.7 4598267, 570345.9 4598386, 570342.5 459~
+## 8 53172296 ((570313.9 4600953, 570311.2 4601011, 570308.2 4601102, 570307.5 460~
+```
+]
+
+---
+count: false
+ 
+## Helper function 1: Transform network
+.panel1-transform-network-demo-user[
+
+```r
+reveal &lt;- args(.transform_network)
+
+reveal &lt;- network_geojson %&gt;%
+* .transform_network()
+
+reveal
+```
+]
+ 
+.panel2-transform-network-demo-user[
+
+```
+## Simple feature collection with 16 features and 3 fields
+## Geometry type: LINESTRING
+## Dimension:     XY
+## Bounding box:  xmin: 568206.3 ymin: 4598184 xmax: 573136.6 ymax: 4602141
+## Projected CRS: NAD83 / UTM zone 15N
+## # A tibble: 16 x 4
+##       id source target                                                  geometry
+##    &lt;int&gt;  &lt;int&gt;  &lt;int&gt;                                          &lt;LINESTRING [m]&gt;
+##  1     1      1      2 (569107.4 4600923, 569162.5 4600924, 569200.6 4600924, 5~
+##  2     2      2      1 (570313.9 4600953, 570298.5 4600952, 570268.8 4600952, 5~
+##  3     3      2      3 (570313.9 4600953, 570344.2 4600953, 570376.7 4600953, 5~
+##  4     4      3      2 (573136.6 4600571, 573123.6 4600570, 573097.6 4600570, 5~
+##  5     5      1      4 (569107.4 4600923, 569078.3 4600922, 569046.9 4600920, 5~
+##  6     6      4      1 (568206.3 4600914, 568264 4600914, 568314 4600914, 56836~
+##  7     7      1      5 (569107.4 4600923, 569108.5 4600836, 569108.8 4600753, 5~
+##  8     8      5      1 (569112.8 4600687, 569111.1 4600715, 569108.8 4600753, 5~
+##  9     9      1      6 (569107.4 4600923, 569107.1 4600943, 569104.2 4601125, 5~
+## 10    10      6      1 (569100.9 4601360, 569102.1 4601298, 569104.2 4601125, 5~
+## 11    11      7      8 (569130.1 4599550, 569126.9 4599800, 569122.8 4599973, 5~
+## 12    12      8      7 (569112.8 4600687, 569119.2 4600364, 569121.2 4600097, 5~
+## 13    13      2      9 (570313.9 4600953, 570315.1 4600927, 570320.4 4600846, 5~
+## 14    14      9      2 (570350.5 4598184, 570348.7 4598267, 570345.9 4598386, 5~
+## 15    15      2     10 (570313.9 4600953, 570311.2 4601011, 570308.2 4601102, 5~
+## 16    16     10      2 (570294.9 4602141, 570294.9 4602141, 570297.5 4601979, 5~
+```
+]
+
+---
+count: false
+ 
+## Helper function 1: Transform network
+.panel1-transform-network-demo-user[
+
+```r
+reveal &lt;- args(.transform_network)
+
+reveal &lt;- network_geojson %&gt;%
+  .transform_network()
+
+*reveal &lt;- network_geojson %&gt;%
+* .transform_network(output = "join_key")
+
+reveal
+```
+]
+ 
+.panel2-transform-network-demo-user[
+
+```
+## # A tibble: 16 x 2
+##       id road_id 
+##  * &lt;int&gt; &lt;chr&gt;   
+##  1     1 52968114
+##  2     2 52968114
+##  3     3 52968327
+##  4     4 52968327
+##  5     5 52968853
+##  6     6 52968853
+##  7     7 53033919
+##  8     8 53033919
+##  9     9 53034396
+## 10    10 53034396
+## 11    11 53034711
+## 12    12 53034711
+## 13    13 53172262
+## 14    14 53172262
+## 15    15 53172296
+## 16    16 53172296
+```
+]
+
+---
+count: false
+ 
+## Helper function 1: Transform network
+.panel1-transform-network-demo-user[
+
+```r
+reveal &lt;- args(.transform_network)
+
+reveal &lt;- network_geojson %&gt;%
+  .transform_network()
+
+reveal &lt;- network_geojson %&gt;%
+  .transform_network(output = "join_key")
+
+*reveal &lt;- network_geojson %&gt;%
+* .transform_network(output = "both")
+
+reveal
+```
+]
+ 
+.panel2-transform-network-demo-user[
+
+```
+## $network
+## Simple feature collection with 16 features and 3 fields
+## Geometry type: LINESTRING
+## Dimension:     XY
+## Bounding box:  xmin: 568206.3 ymin: 4598184 xmax: 573136.6 ymax: 4602141
+## Projected CRS: NAD83 / UTM zone 15N
+## # A tibble: 16 x 4
+##       id source target                                                  geometry
+##    &lt;int&gt;  &lt;int&gt;  &lt;int&gt;                                          &lt;LINESTRING [m]&gt;
+##  1     1      1      2 (569107.4 4600923, 569162.5 4600924, 569200.6 4600924, 5~
+##  2     2      2      1 (570313.9 4600953, 570298.5 4600952, 570268.8 4600952, 5~
+##  3     3      2      3 (570313.9 4600953, 570344.2 4600953, 570376.7 4600953, 5~
+##  4     4      3      2 (573136.6 4600571, 573123.6 4600570, 573097.6 4600570, 5~
+##  5     5      1      4 (569107.4 4600923, 569078.3 4600922, 569046.9 4600920, 5~
+##  6     6      4      1 (568206.3 4600914, 568264 4600914, 568314 4600914, 56836~
+##  7     7      1      5 (569107.4 4600923, 569108.5 4600836, 569108.8 4600753, 5~
+##  8     8      5      1 (569112.8 4600687, 569111.1 4600715, 569108.8 4600753, 5~
+##  9     9      1      6 (569107.4 4600923, 569107.1 4600943, 569104.2 4601125, 5~
+## 10    10      6      1 (569100.9 4601360, 569102.1 4601298, 569104.2 4601125, 5~
+## 11    11      7      8 (569130.1 4599550, 569126.9 4599800, 569122.8 4599973, 5~
+## 12    12      8      7 (569112.8 4600687, 569119.2 4600364, 569121.2 4600097, 5~
+## 13    13      2      9 (570313.9 4600953, 570315.1 4600927, 570320.4 4600846, 5~
+## 14    14      9      2 (570350.5 4598184, 570348.7 4598267, 570345.9 4598386, 5~
+## 15    15      2     10 (570313.9 4600953, 570311.2 4601011, 570308.2 4601102, 5~
+## 16    16     10      2 (570294.9 4602141, 570294.9 4602141, 570297.5 4601979, 5~
+## 
+## $join_key
+## # A tibble: 16 x 2
+##       id road_id 
+##  * &lt;int&gt; &lt;chr&gt;   
+##  1     1 52968114
+##  2     2 52968114
+##  3     3 52968327
+##  4     4 52968327
+##  5     5 52968853
+##  6     6 52968853
+##  7     7 53033919
+##  8     8 53033919
+##  9     9 53034396
+## 10    10 53034396
+## 11    11 53034711
+## 12    12 53034711
+## 13    13 53172262
+## 14    14 53172262
+## 15    15 53172296
+## 16    16 53172296
+```
+]
+
+&lt;style&gt;
+.panel1-transform-network-demo-user {
+  color: black;
+  width: 38.6060606060606%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-transform-network-demo-user {
+  color: black;
+  width: 59.3939393939394%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-transform-network-demo-user {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Helper function 1b: Visualize transformed network
+.panel1-viz-transformed-network-user[
+
+```r
+*reveal &lt;- args(.viz_transformed_network)
+
+reveal
+```
+]
+ 
+.panel2-viz-transformed-network-user[
+
+```
+## function (network) 
+## NULL
+```
+]
+
+---
+count: false
+ 
+## Helper function 1b: Visualize transformed network
+.panel1-viz-transformed-network-user[
+
+```r
+reveal &lt;- args(.viz_transformed_network)
+
+*reveal &lt;- network_geojson %&gt;%
+* .viz_transformed_network()
+
+reveal
+```
+]
+ 
+.panel2-viz-transformed-network-user[
+<div style="display:inline;width:49%;float:left;border-style:solid;border-color:#BEBEBE;border-width:1px 1px 1px 1px;">
+<div id="htmlwidget-4803" style="width:100%;height:400px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-4803">{"x":{"options":{"minZoom":1,"maxZoom":52,"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"preferCanvas":false,"bounceAtZoomLimits":false,"maxBounds":[[[-90,-370]],[[90,370]]]},"calls":[{"method":"addProviderTiles","args":["CartoDB.Positron","CartoDB.Positron","CartoDB.Positron",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["CartoDB.DarkMatter","CartoDB.DarkMatter","CartoDB.DarkMatter",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["OpenStreetMap","OpenStreetMap","OpenStreetMap",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["Esri.WorldImagery","Esri.WorldImagery","Esri.WorldImagery",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["OpenTopoMap","OpenTopoMap","OpenTopoMap",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"createMapPane","args":["line",430]},{"method":"addPolylines","args":[[[[{"lng":[-92.1712741120217,-92.170613444721,-92.1701565480703,-92.1698806981515,-92.1693903450506,-92.168942519655,-92.1680712583933,-92.1676193407,-92.1673436392502,-92.166986599102,-92.1665674745204,-92.1659148836355,-92.1655719696523,-92.164610515425,-92.1636584299075,-92.1623782256146,-92.1613500767776,-92.1607597921649,-92.1605025299164,-92.1601830361131,-92.1596740924897,-92.1591173398082,-92.1587269901966,-92.1582787135323,-92.1576305775501,-92.1573449154008,-92.1569878738826,-92.1568035296375],"lat":[41.5569913191977,41.5569976552595,41.5569959017096,41.5569855318906,41.5569905335234,41.5570103309776,41.557021603111,41.5570091701118,41.556991647167,41.5569946206027,41.5570075940414,41.5570321341695,41.5570424194175,41.557041883821,41.5570486008671,41.5570407337783,41.5570429622738,41.5570467546886,41.557058031101,41.557086453261,41.5570697423609,41.5570631936708,41.5570657510083,41.5571069518458,41.5571457972195,41.5571495827718,41.5571525254301,41.5571539653757]}]],[[{"lng":[-92.1568035296375,-92.1564404140257,-92.1560502102331,-92.1557174823142,-92.155417843502,-92.1547663666628,-92.1544241237211,-92.1540531810434,-92.1536203018399,-92.1530348491979,-92.1524731894018,-92.1516403657036,-92.1512688241191,-92.1507549733586,-92.1499173945183,-92.1488987611757,-92.1479088312972,-92.146904475643,-92.1460237674956,-92.1455474588356,-92.144914119229,-92.1445471067929,-92.1442138577614,-92.1437810555436,-92.1430484640008,-92.1423300750922,-92.1414254950471,-92.1408017473143,-92.140573336954,-92.1403786908292,-92.1402558743313,-92.1401430302336,-92.140016666109,-92.1398533691215,-92.139652911593,-92.1394613682267,-92.1392607596016,-92.1391169550002,-92.1389470187216,-92.1387720246809,-92.1386208976871,-92.1383697826999,-92.138314799943,-92.1383126676794,-92.1380473598498,-92.1378224422516,-92.1376116484828,-92.1374336353617,-92.137236815269,-92.1370674849714,-92.1369260248831,-92.1367695326787,-92.1365697595991,-92.1362509550955,-92.1356989930172,-92.1349948439105,-92.1344713555969,-92.1336577658845,-92.1326963676672,-92.1315064172232,-92.1305255274282,-92.1292592157383,-92.1279700264959,-92.1271753967607,-92.1262187529668,-92.1251809142948,-92.1245713204625,-92.1240053165933,-92.1234725431358,-92.1231607385969,-92.1230040544226],"lat":[41.5571539653757,41.5571567978932,41.557152197428,41.5571303995198,41.5571197146434,41.5570905765998,41.5570686609677,41.5570535557431,41.5570412920449,41.5570415255187,41.5570420351008,41.5570357620963,41.5570492416972,41.5570395838028,41.557033241376,41.557035470275,41.5570308818505,41.5570332623152,41.5570406788927,41.5570564717864,41.5570703935764,41.5570946309869,41.5570978176916,41.5570819415051,41.5570624964932,41.5570467925338,41.5570574641463,41.5570679030731,41.5570651789449,41.5570414048578,41.5569970389812,41.5569313396773,41.556829728615,41.5566740473227,41.5564750231975,41.5563047044861,41.5561128271392,41.5559359284865,41.5556443134499,41.5553669374178,41.5550862696334,41.5545827508384,41.5544819889278,41.5544805383351,41.5543000377887,41.5541328933737,41.5539730666371,41.5538386580843,41.5536932990473,41.553598319546,41.5535358512795,41.553508952842,41.5535029886923,41.5534991743057,41.5534925681469,41.5534805617294,41.5534778655833,41.5534645395676,41.5534637348091,41.553467328719,41.5534877216995,41.5535010993555,41.5534712866985,41.5534617175769,41.5534609154402,41.5534734255558,41.5534910969781,41.5534735393665,41.5534599546877,41.5534577810582,41.5534614027489]}]],[[{"lng":[-92.1820796060006,-92.1813874852233,-92.1807878288242,-92.1801573357767,-92.1794958203765,-92.1786200949819,-92.1777204297096,-92.1770828522782,-92.1765113083415,-92.1760589507207,-92.1752736384239,-92.1746025315767,-92.1742124012438,-92.1732031425398,-92.1726131521704,-92.1719990015665,-92.1716227070407,-92.1712741120217],"lat":[41.5569848050007,41.5569817508157,41.5569783859538,41.5569655696711,41.5569614838503,41.5569584830878,41.5569623503914,41.5569513773962,41.5569697668258,41.5569788143339,41.5569768402662,41.5569761867138,41.5569680749164,41.5569777809515,41.5569673363466,41.5569744816966,41.5569879727547,41.5569913191977]}]],[[{"lng":[-92.1712368439524,-92.1712538955935,-92.1712768527368,-92.1712708607717,-92.1712741120217],"lat":[41.5548640536111,41.5551186955782,41.5554615533706,41.5562122595737,41.5569913191977]}]],[[{"lng":[-92.1712741120217,-92.1712748597794,-92.1712884722428,-92.1712944872048,-92.1713018514812],"lat":[41.5569913191977,41.5571704397222,41.5588151530402,41.5603668258842,41.5609317806962]}]],[[{"lng":[-92.1711597201043,-92.1711686882104,-92.1711983411712,-92.1712037729693,-92.1711968907963,-92.171236844177],"lat":[41.5446270953969,41.5468764247574,41.5484355232151,41.5495546008586,41.5519605772095,41.5548640426202]}]],[[{"lng":[-92.156689213448,-92.1567010326496,-92.1567209820761,-92.1567415489371,-92.1567438586854,-92.156723066437,-92.1567176143594,-92.1566748972893,-92.1565730429112,-92.1564989553463,-92.1564474976011,-92.1564201180965,-92.156398324833,-92.1564056658206,-92.1564184043805,-92.1564218489031,-92.1564189617177,-92.1564269430245,-92.1564330985278,-92.1564617290711,-92.1565093503364,-92.1565819647091,-92.1566701758115,-92.1567386741261,-92.1567921610533,-92.1568035296375],"lat":[41.5322166111687,41.5329659830813,41.5340334680653,41.5355770582813,41.5374894057817,41.5390858658212,41.5395045733143,41.5402856616031,41.5418754169307,41.5428941825949,41.5435878853156,41.5443929575623,41.5454361467925,41.5463487520378,41.5477613208565,41.5488603517301,41.5497569657987,41.5508917568503,41.5521138087231,41.5530187308456,41.5537731114287,41.5545952342847,41.5554294411055,41.5561959710686,41.5569226481464,41.5571539653757]}]],[[{"lng":[-92.1568035296375,-92.1568292259237,-92.1568543213493,-92.156850280525,-92.1568381166175,-92.1568410137516,-92.1568497875745,-92.1568800592949,-92.1568801250067,-92.1568921568619,-92.1568921566374],"lat":[41.5571539653757,41.5576769039823,41.5584984669922,41.5594506112476,41.5607914722052,41.5616643491027,41.563267310851,41.5653585229492,41.5664025435459,41.5678581435005,41.5678581544893]}]]],null,"network",{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"pane":"line","stroke":true,"color":["#4B0055","#3C3777","#006290","#008A98","#00AC8E","#25C771","#A6DA42","#FDE333"],"weight":2,"opacity":[0.9,0.9,0.9,0.9,0.9,0.9,0.9,0.9],"fill":false,"fillColor":["#4B0055","#3C3777","#006290","#008A98","#00AC8E","#25C771","#A6DA42","#FDE333"],"fillOpacity":[1,1,1,1,1,1,1,1],"smoothFactor":1,"noClip":false},["<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>1&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>52968114&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>2&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>52968327&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>3&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>52968853&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>4&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53033919&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>5&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53034396&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>6&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53034711&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>7&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53172262&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>8&emsp;<\/td><\/tr><tr><td>1<\/td><th>road_id&emsp;<\/th><td>53172296&emsp;<\/td><\/tr><tr><td>2<\/td><th>geometry&emsp;<\/th><td>sfc_MULTILINESTRING&emsp;<\/td><\/tr><\/table><\/div>"],{"maxWidth":800,"minWidth":50,"autoPan":true,"keepInView":false,"closeButton":true,"closeOnClick":true,"className":""},["52968114","52968327","52968853","53033919","53034396","53034711","53172262","53172296"],{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},{"stroke":true,"weight":3,"opacity":1,"fill":false,"fillOpacity":0,"bringToFront":false,"sendToBack":false}]},{"method":"addScaleBar","args":[{"maxWidth":100,"metric":true,"imperial":true,"updateWhenIdle":true,"position":"bottomleft"}]},{"method":"addHomeButton","args":[-92.1820796060006,41.5322166111687,-92.1230040544226,41.5678581544893,true,"network","Zoom to network","<strong> network <\/strong>","bottomright"]},{"method":"addLayersControl","args":[["CartoDB.Positron","CartoDB.DarkMatter","OpenStreetMap","Esri.WorldImagery","OpenTopoMap"],"network",{"collapsed":true,"autoZIndex":true,"position":"topleft"}]},{"method":"addLegend","args":[{"colors":["#4B0055","#3C3777","#006290","#008A98","#00AC8E","#25C771","#A6DA42","#FDE333"],"labels":["52968114","52968327","52968853","53033919","53034396","53034711","53172262","53172296"],"na_color":null,"na_label":"NA","opacity":1,"position":"topright","type":"factor","title":"network","extra":null,"layerId":null,"className":"info legend","group":"network"}]}],"limits":{"lat":[41.5322166111687,41.5678581544893],"lng":[-92.1820796060006,-92.1230040544226]},"fitBounds":[41.5322166111687,-92.1820796060006,41.5678581544893,-92.1230040544226,[]]},"evals":[],"jsHooks":{"render":[{"code":"function(el, x, data) {\n  return (\n      function(el, x, data) {\n      // get the leaflet map\n      var map = this; //HTMLWidgets.find('#' + el.id);\n      // we need a new div element because we have to handle\n      // the mouseover output separately\n      // debugger;\n      function addElement () {\n      // generate new div Element\n      var newDiv = $(document.createElement('div'));\n      // append at end of leaflet htmlwidget container\n      $(el).append(newDiv);\n      //provide ID and style\n      newDiv.addClass('lnlt');\n      newDiv.css({\n      'position': 'relative',\n      'bottomleft':  '0px',\n      'background-color': 'rgba(255, 255, 255, 0.7)',\n      'box-shadow': '0 0 2px #bbb',\n      'background-clip': 'padding-box',\n      'margin': '0',\n      'padding-left': '5px',\n      'color': '#333',\n      'font': '9px/1.5 \"Helvetica Neue\", Arial, Helvetica, sans-serif',\n      'z-index': '700',\n      });\n      return newDiv;\n      }\n\n\n      // check for already existing lnlt class to not duplicate\n      var lnlt = $(el).find('.lnlt');\n\n      if(!lnlt.length) {\n      lnlt = addElement();\n\n      // grab the special div we generated in the beginning\n      // and put the mousmove output there\n\n      map.on('mousemove', function (e) {\n      if (e.originalEvent.ctrlKey) {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                           ' lon: ' + (e.latlng.lng).toFixed(5) +\n                           ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                           ' | zoom: ' + map.getZoom() +\n                           ' | x: ' + L.CRS.EPSG3857.project(e.latlng).x.toFixed(0) +\n                           ' | y: ' + L.CRS.EPSG3857.project(e.latlng).y.toFixed(0) +\n                           ' | epsg: 3857 ' +\n                           ' | proj4: +proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs ');\n      } else {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                      ' lon: ' + (e.latlng.lng).toFixed(5) +\n                      ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                      ' | zoom: ' + map.getZoom() + ' ');\n      }\n      });\n\n      // remove the lnlt div when mouse leaves map\n      map.on('mouseout', function (e) {\n      var strip = document.querySelector('.lnlt');\n      if( strip !==null) strip.remove();\n      });\n\n      };\n\n      //$(el).keypress(67, function(e) {\n      map.on('preclick', function(e) {\n      if (e.originalEvent.ctrlKey) {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                      ' lon: ' + (e.latlng.lng).toFixed(5) +\n                      ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                      ' | zoom: ' + map.getZoom() + ' ');\n      var txt = document.querySelector('.lnlt').textContent;\n      console.log(txt);\n      //txt.innerText.focus();\n      //txt.select();\n      setClipboardText('\"' + txt + '\"');\n      }\n      });\n\n      }\n      ).call(this.getMap(), el, x, data);\n}","data":null},{"code":"function(el, x, data) {\n  return (function(el,x,data){\n           var map = this;\n\n           map.on('keypress', function(e) {\n               console.log(e.originalEvent.code);\n               var key = e.originalEvent.code;\n               if (key === 'KeyE') {\n                   var bb = this.getBounds();\n                   var txt = JSON.stringify(bb);\n                   console.log(txt);\n\n                   setClipboardText('\\'' + txt + '\\'');\n               }\n           })\n        }).call(this.getMap(), el, x, data);\n}","data":null}]}}</script>
+</div>
+<div style="display:inline;width:49%;float:left;border-style:solid;border-color:#BEBEBE;border-width:1px 1px 1px 1px;">
+<div id="htmlwidget-4450" style="width:100%;height:400px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-4450">{"x":{"options":{"minZoom":1,"maxZoom":52,"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"preferCanvas":false,"bounceAtZoomLimits":false,"maxBounds":[[[-90,-370]],[[90,370]]]},"calls":[{"method":"addProviderTiles","args":["CartoDB.Positron","CartoDB.Positron","CartoDB.Positron",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["CartoDB.DarkMatter","CartoDB.DarkMatter","CartoDB.DarkMatter",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["OpenStreetMap","OpenStreetMap","OpenStreetMap",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["Esri.WorldImagery","Esri.WorldImagery","Esri.WorldImagery",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["OpenTopoMap","OpenTopoMap","OpenTopoMap",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"createMapPane","args":["point",440]},{"method":"addCircleMarkers","args":[[41.5569913191977,41.5571539653757,41.5534614027489,41.5569848050007,41.5548640536111,41.5609317806962,41.5446270953969,41.5548640426202,41.5322166111687,41.5678581544893],[-92.1712741120217,-92.1568035296375,-92.1230040544226,-92.1820796060006,-92.1712368439524,-92.1713018514812,-92.1711597201043,-92.171236844177,-92.156689213448,-92.1568921566374],6,null,"nodes",{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"pane":"point","stroke":true,"color":"#333333","weight":1,"opacity":0.9,"fill":true,"fillColor":"#6666FF","fillOpacity":0.6},null,null,"<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>1&emsp;<\/td><\/tr><tr><td>1<\/td><th>geometry&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>",{"maxWidth":800,"minWidth":50,"autoPan":true,"keepInView":false,"closeButton":true,"closeOnClick":true,"className":""},"1",{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addScaleBar","args":[{"maxWidth":100,"metric":true,"imperial":true,"updateWhenIdle":true,"position":"bottomleft"}]},{"method":"addHomeButton","args":[-92.1820796060006,41.5322166111687,-92.1230040544226,41.5678581544893,true,"nodes","Zoom to nodes","<strong> nodes <\/strong>","bottomright"]},{"method":"addLegend","args":[{"colors":["#6666FF"],"labels":["nodes"],"na_color":null,"na_label":"NA","opacity":1,"position":"topright","type":"factor","title":"","extra":null,"layerId":null,"className":"info legend","group":"nodes"}]},{"method":"createMapPane","args":["line",430]},{"method":"addPolylines","args":[[[[{"lng":[-92.1712741120217,-92.170613444721,-92.1701565480703,-92.1698806981515,-92.1693903450506,-92.168942519655,-92.1680712583933,-92.1676193407,-92.1673436392502,-92.166986599102,-92.1665674745204,-92.1659148836355,-92.1655719696523,-92.164610515425,-92.1636584299075,-92.1623782256146,-92.1613500767776,-92.1607597921649,-92.1605025299164,-92.1601830361131,-92.1596740924897,-92.1591173398082,-92.1587269901966,-92.1582787135323,-92.1576305775501,-92.1573449154008,-92.1569878738826,-92.1568035296375],"lat":[41.5569913191977,41.5569976552595,41.5569959017096,41.5569855318906,41.5569905335234,41.5570103309776,41.557021603111,41.5570091701118,41.556991647167,41.5569946206027,41.5570075940414,41.5570321341695,41.5570424194175,41.557041883821,41.5570486008671,41.5570407337783,41.5570429622738,41.5570467546886,41.557058031101,41.557086453261,41.5570697423609,41.5570631936708,41.5570657510083,41.5571069518458,41.5571457972195,41.5571495827718,41.5571525254301,41.5571539653757]}]],[[{"lng":[-92.1568035296375,-92.1569878738826,-92.1573449154008,-92.1576305775501,-92.1582787135323,-92.1587269901966,-92.1591173398082,-92.1596740924897,-92.1601830361131,-92.1605025299164,-92.1607597921649,-92.1613500767776,-92.1623782256146,-92.1636584299075,-92.164610515425,-92.1655719696523,-92.1659148836355,-92.1665674745204,-92.166986599102,-92.1673436392502,-92.1676193407,-92.1680712583933,-92.168942519655,-92.1693903450506,-92.1698806981515,-92.1701565480703,-92.170613444721,-92.1712741120217],"lat":[41.5571539653757,41.5571525254301,41.5571495827718,41.5571457972195,41.5571069518458,41.5570657510083,41.5570631936708,41.5570697423609,41.557086453261,41.557058031101,41.5570467546886,41.5570429622738,41.5570407337783,41.5570486008671,41.557041883821,41.5570424194175,41.5570321341695,41.5570075940414,41.5569946206027,41.556991647167,41.5570091701118,41.557021603111,41.5570103309776,41.5569905335234,41.5569855318906,41.5569959017096,41.5569976552595,41.5569913191977]}]],[[{"lng":[-92.1568035296375,-92.1564404140257,-92.1560502102331,-92.1557174823142,-92.155417843502,-92.1547663666628,-92.1544241237211,-92.1540531810434,-92.1536203018399,-92.1530348491979,-92.1524731894018,-92.1516403657036,-92.1512688241191,-92.1507549733586,-92.1499173945183,-92.1488987611757,-92.1479088312972,-92.146904475643,-92.1460237674956,-92.1455474588356,-92.144914119229,-92.1445471067929,-92.1442138577614,-92.1437810555436,-92.1430484640008,-92.1423300750922,-92.1414254950471,-92.1408017473143,-92.140573336954,-92.1403786908292,-92.1402558743313,-92.1401430302336,-92.140016666109,-92.1398533691215,-92.139652911593,-92.1394613682267,-92.1392607596016,-92.1391169550002,-92.1389470187216,-92.1387720246809,-92.1386208976871,-92.1383697826999,-92.138314799943,-92.1383126676794,-92.1380473598498,-92.1378224422516,-92.1376116484828,-92.1374336353617,-92.137236815269,-92.1370674849714,-92.1369260248831,-92.1367695326787,-92.1365697595991,-92.1362509550955,-92.1356989930172,-92.1349948439105,-92.1344713555969,-92.1336577658845,-92.1326963676672,-92.1315064172232,-92.1305255274282,-92.1292592157383,-92.1279700264959,-92.1271753967607,-92.1262187529668,-92.1251809142948,-92.1245713204625,-92.1240053165933,-92.1234725431358,-92.1231607385969,-92.1230040544226],"lat":[41.5571539653757,41.5571567978932,41.557152197428,41.5571303995198,41.5571197146434,41.5570905765998,41.5570686609677,41.5570535557431,41.5570412920449,41.5570415255187,41.5570420351008,41.5570357620963,41.5570492416972,41.5570395838028,41.557033241376,41.557035470275,41.5570308818505,41.5570332623152,41.5570406788927,41.5570564717864,41.5570703935764,41.5570946309869,41.5570978176916,41.5570819415051,41.5570624964932,41.5570467925338,41.5570574641463,41.5570679030731,41.5570651789449,41.5570414048578,41.5569970389812,41.5569313396773,41.556829728615,41.5566740473227,41.5564750231975,41.5563047044861,41.5561128271392,41.5559359284865,41.5556443134499,41.5553669374178,41.5550862696334,41.5545827508384,41.5544819889278,41.5544805383351,41.5543000377887,41.5541328933737,41.5539730666371,41.5538386580843,41.5536932990473,41.553598319546,41.5535358512795,41.553508952842,41.5535029886923,41.5534991743057,41.5534925681469,41.5534805617294,41.5534778655833,41.5534645395676,41.5534637348091,41.553467328719,41.5534877216995,41.5535010993555,41.5534712866985,41.5534617175769,41.5534609154402,41.5534734255558,41.5534910969781,41.5534735393665,41.5534599546877,41.5534577810582,41.5534614027489]}]],[[{"lng":[-92.1230040544226,-92.1231607385969,-92.1234725431358,-92.1240053165933,-92.1245713204625,-92.1251809142948,-92.1262187529668,-92.1271753967607,-92.1279700264959,-92.1292592157383,-92.1305255274282,-92.1315064172232,-92.1326963676672,-92.1336577658845,-92.1344713555969,-92.1349948439105,-92.1356989930172,-92.1362509550955,-92.1365697595991,-92.1367695326787,-92.1369260248831,-92.1370674849714,-92.137236815269,-92.1374336353617,-92.1376116484828,-92.1378224422516,-92.1380473598498,-92.1383126676794,-92.138314799943,-92.1383697826999,-92.1386208976871,-92.1387720246809,-92.1389470187216,-92.1391169550002,-92.1392607596016,-92.1394613682267,-92.139652911593,-92.1398533691215,-92.140016666109,-92.1401430302336,-92.1402558743313,-92.1403786908292,-92.140573336954,-92.1408017473143,-92.1414254950471,-92.1423300750922,-92.1430484640008,-92.1437810555436,-92.1442138577614,-92.1445471067929,-92.144914119229,-92.1455474588356,-92.1460237674956,-92.146904475643,-92.1479088312972,-92.1488987611757,-92.1499173945183,-92.1507549733586,-92.1512688241191,-92.1516403657036,-92.1524731894018,-92.1530348491979,-92.1536203018399,-92.1540531810434,-92.1544241237211,-92.1547663666628,-92.155417843502,-92.1557174823142,-92.1560502102331,-92.1564404140257,-92.1568035296375],"lat":[41.5534614027489,41.5534577810582,41.5534599546877,41.5534735393665,41.5534910969781,41.5534734255558,41.5534609154402,41.5534617175769,41.5534712866985,41.5535010993555,41.5534877216995,41.553467328719,41.5534637348091,41.5534645395676,41.5534778655833,41.5534805617294,41.5534925681469,41.5534991743057,41.5535029886923,41.553508952842,41.5535358512795,41.553598319546,41.5536932990473,41.5538386580843,41.5539730666371,41.5541328933737,41.5543000377887,41.5544805383351,41.5544819889278,41.5545827508384,41.5550862696334,41.5553669374178,41.5556443134499,41.5559359284865,41.5561128271392,41.5563047044861,41.5564750231975,41.5566740473227,41.556829728615,41.5569313396773,41.5569970389812,41.5570414048578,41.5570651789449,41.5570679030731,41.5570574641463,41.5570467925338,41.5570624964932,41.5570819415051,41.5570978176916,41.5570946309869,41.5570703935764,41.5570564717864,41.5570406788927,41.5570332623152,41.5570308818505,41.557035470275,41.557033241376,41.5570395838028,41.5570492416972,41.5570357620963,41.5570420351008,41.5570415255187,41.5570412920449,41.5570535557431,41.5570686609677,41.5570905765998,41.5571197146434,41.5571303995198,41.557152197428,41.5571567978932,41.5571539653757]}]],[[{"lng":[-92.1712741120217,-92.1716227070407,-92.1719990015665,-92.1726131521704,-92.1732031425398,-92.1742124012438,-92.1746025315767,-92.1752736384239,-92.1760589507207,-92.1765113083415,-92.1770828522782,-92.1777204297096,-92.1786200949819,-92.1794958203765,-92.1801573357767,-92.1807878288242,-92.1813874852233,-92.1820796060006],"lat":[41.5569913191977,41.5569879727547,41.5569744816966,41.5569673363466,41.5569777809515,41.5569680749164,41.5569761867138,41.5569768402662,41.5569788143339,41.5569697668258,41.5569513773962,41.5569623503914,41.5569584830878,41.5569614838503,41.5569655696711,41.5569783859538,41.5569817508157,41.5569848050007]}]],[[{"lng":[-92.1820796060006,-92.1813874852233,-92.1807878288242,-92.1801573357767,-92.1794958203765,-92.1786200949819,-92.1777204297096,-92.1770828522782,-92.1765113083415,-92.1760589507207,-92.1752736384239,-92.1746025315767,-92.1742124012438,-92.1732031425398,-92.1726131521704,-92.1719990015665,-92.1716227070407,-92.1712741120217],"lat":[41.5569848050007,41.5569817508157,41.5569783859538,41.5569655696711,41.5569614838503,41.5569584830878,41.5569623503914,41.5569513773962,41.5569697668258,41.5569788143339,41.5569768402662,41.5569761867138,41.5569680749164,41.5569777809515,41.5569673363466,41.5569744816966,41.5569879727547,41.5569913191977]}]],[[{"lng":[-92.1712741120217,-92.1712708607717,-92.1712768527368,-92.1712538955935,-92.1712368439524],"lat":[41.5569913191977,41.5562122595737,41.5554615533706,41.5551186955782,41.5548640536111]}]],[[{"lng":[-92.1712368439524,-92.1712538955935,-92.1712768527368,-92.1712708607717,-92.1712741120217],"lat":[41.5548640536111,41.5551186955782,41.5554615533706,41.5562122595737,41.5569913191977]}]],[[{"lng":[-92.1712741120217,-92.1712748597794,-92.1712884722428,-92.1712944872048,-92.1713018514812],"lat":[41.5569913191977,41.5571704397222,41.5588151530402,41.5603668258842,41.5609317806962]}]],[[{"lng":[-92.1713018514812,-92.1712944872048,-92.1712884722428,-92.1712748597794,-92.1712741120217],"lat":[41.5609317806962,41.5603668258842,41.5588151530402,41.5571704397222,41.5569913191977]}]],[[{"lng":[-92.1711597201043,-92.1711686882104,-92.1711983411712,-92.1712037729693,-92.1711968907963,-92.171236844177],"lat":[41.5446270953969,41.5468764247574,41.5484355232151,41.5495546008586,41.5519605772095,41.5548640426202]}]],[[{"lng":[-92.171236844177,-92.1711968907963,-92.1712037729693,-92.1711983411712,-92.1711686882104,-92.1711597201043],"lat":[41.5548640426202,41.5519605772095,41.5495546008586,41.5484355232151,41.5468764247574,41.5446270953969]}]],[[{"lng":[-92.1568035296375,-92.1567921610533,-92.1567386741261,-92.1566701758115,-92.1565819647091,-92.1565093503364,-92.1564617290711,-92.1564330985278,-92.1564269430245,-92.1564189617177,-92.1564218489031,-92.1564184043805,-92.1564056658206,-92.156398324833,-92.1564201180965,-92.1564474976011,-92.1564989553463,-92.1565730429112,-92.1566748972893,-92.1567176143594,-92.156723066437,-92.1567438586854,-92.1567415489371,-92.1567209820761,-92.1567010326496,-92.156689213448],"lat":[41.5571539653757,41.5569226481464,41.5561959710686,41.5554294411055,41.5545952342847,41.5537731114287,41.5530187308456,41.5521138087231,41.5508917568503,41.5497569657987,41.5488603517301,41.5477613208565,41.5463487520378,41.5454361467925,41.5443929575623,41.5435878853156,41.5428941825949,41.5418754169307,41.5402856616031,41.5395045733143,41.5390858658212,41.5374894057817,41.5355770582813,41.5340334680653,41.5329659830813,41.5322166111687]}]],[[{"lng":[-92.156689213448,-92.1567010326496,-92.1567209820761,-92.1567415489371,-92.1567438586854,-92.156723066437,-92.1567176143594,-92.1566748972893,-92.1565730429112,-92.1564989553463,-92.1564474976011,-92.1564201180965,-92.156398324833,-92.1564056658206,-92.1564184043805,-92.1564218489031,-92.1564189617177,-92.1564269430245,-92.1564330985278,-92.1564617290711,-92.1565093503364,-92.1565819647091,-92.1566701758115,-92.1567386741261,-92.1567921610533,-92.1568035296375],"lat":[41.5322166111687,41.5329659830813,41.5340334680653,41.5355770582813,41.5374894057817,41.5390858658212,41.5395045733143,41.5402856616031,41.5418754169307,41.5428941825949,41.5435878853156,41.5443929575623,41.5454361467925,41.5463487520378,41.5477613208565,41.5488603517301,41.5497569657987,41.5508917568503,41.5521138087231,41.5530187308456,41.5537731114287,41.5545952342847,41.5554294411055,41.5561959710686,41.5569226481464,41.5571539653757]}]],[[{"lng":[-92.1568035296375,-92.1568292259237,-92.1568543213493,-92.156850280525,-92.1568381166175,-92.1568410137516,-92.1568497875745,-92.1568800592949,-92.1568801250067,-92.1568921568619,-92.1568921566374],"lat":[41.5571539653757,41.5576769039823,41.5584984669922,41.5594506112476,41.5607914722052,41.5616643491027,41.563267310851,41.5653585229492,41.5664025435459,41.5678581435005,41.5678581544893]}]],[[{"lng":[-92.1568921566374,-92.1568921568619,-92.1568801250067,-92.1568800592949,-92.1568497875745,-92.1568410137516,-92.1568381166175,-92.156850280525,-92.1568543213493,-92.1568292259237,-92.1568035296375],"lat":[41.5678581544893,41.5678581435005,41.5664025435459,41.5653585229492,41.563267310851,41.5616643491027,41.5607914722052,41.5594506112476,41.5584984669922,41.5576769039823,41.5571539653757]}]]],null,"edges",{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"pane":"line","stroke":true,"color":"#6666FF","weight":2,"opacity":0.9,"fill":false,"fillColor":"#6666FF","fillOpacity":1,"smoothFactor":1,"noClip":false},["<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>1&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>2&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>3&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td> 3&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td> 3&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td> 3&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>4&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td> 3&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td> 4&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td> 3&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>5&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td> 4&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td> 5&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td> 4&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>6&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td> 4&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td> 6&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td> 4&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>7&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td> 5&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td> 7&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td> 5&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>8&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td> 5&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td> 8&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td> 5&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>9&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td> 6&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td> 9&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td> 6&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>10&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td> 6&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td>10&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td> 6&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td> 1&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>11&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td> 7&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td> 8&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td>11&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td> 7&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td> 8&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>12&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td> 8&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td> 7&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td>12&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td> 8&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td> 7&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>13&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td> 9&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td>13&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td> 9&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>14&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td> 9&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td>14&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td> 9&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>15&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td>10&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td>15&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td>10&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>16&emsp;<\/td><\/tr><tr><td>1<\/td><th>from&emsp;<\/th><td>10&emsp;<\/td><\/tr><tr><td>2<\/td><th>to&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>3<\/td><th>id&emsp;<\/th><td>16&emsp;<\/td><\/tr><tr><td>4<\/td><th>source&emsp;<\/th><td>10&emsp;<\/td><\/tr><tr><td>5<\/td><th>target&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>6<\/td><th>geometry&emsp;<\/th><td>sfc_LINESTRING&emsp;<\/td><\/tr><\/table><\/div>"],{"maxWidth":800,"minWidth":50,"autoPan":true,"keepInView":false,"closeButton":true,"closeOnClick":true,"className":""},"1",{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},{"stroke":true,"weight":3,"opacity":1,"fill":false,"fillOpacity":0,"bringToFront":false,"sendToBack":false}]},{"method":"addHomeButton","args":[-92.1820796060006,41.5322166111687,-92.1230040544226,41.5678581544893,true,"edges","Zoom to edges","<strong> edges <\/strong>","bottomright"]},{"method":"addLayersControl","args":[["CartoDB.Positron","CartoDB.DarkMatter","OpenStreetMap","Esri.WorldImagery","OpenTopoMap"],["nodes","edges"],{"collapsed":true,"autoZIndex":true,"position":"topleft"}]},{"method":"addLegend","args":[{"colors":["#6666FF"],"labels":["edges"],"na_color":null,"na_label":"NA","opacity":1,"position":"topright","type":"factor","title":"","extra":null,"layerId":null,"className":"info legend","group":"edges"}]},{"method":"addHomeButton","args":[-92.1820796060006,41.5322166111687,-92.1230040544226,41.5678581544893,true,null,"Zoom to full extent","<strong>Zoom full<\/strong>","bottomleft"]},{"method":"hideGroup","args":[null]}],"limits":{"lat":[41.5322166111687,41.5678581544893],"lng":[-92.1820796060006,-92.1230040544226]},"fitBounds":[41.5322166111687,-92.1820796060006,41.5678581544893,-92.1230040544226,[]]},"evals":[],"jsHooks":{"render":[{"code":"function(el, x, data) {\n  return (\n      function(el, x, data) {\n      // get the leaflet map\n      var map = this; //HTMLWidgets.find('#' + el.id);\n      // we need a new div element because we have to handle\n      // the mouseover output separately\n      // debugger;\n      function addElement () {\n      // generate new div Element\n      var newDiv = $(document.createElement('div'));\n      // append at end of leaflet htmlwidget container\n      $(el).append(newDiv);\n      //provide ID and style\n      newDiv.addClass('lnlt');\n      newDiv.css({\n      'position': 'relative',\n      'bottomleft':  '0px',\n      'background-color': 'rgba(255, 255, 255, 0.7)',\n      'box-shadow': '0 0 2px #bbb',\n      'background-clip': 'padding-box',\n      'margin': '0',\n      'padding-left': '5px',\n      'color': '#333',\n      'font': '9px/1.5 \"Helvetica Neue\", Arial, Helvetica, sans-serif',\n      'z-index': '700',\n      });\n      return newDiv;\n      }\n\n\n      // check for already existing lnlt class to not duplicate\n      var lnlt = $(el).find('.lnlt');\n\n      if(!lnlt.length) {\n      lnlt = addElement();\n\n      // grab the special div we generated in the beginning\n      // and put the mousmove output there\n\n      map.on('mousemove', function (e) {\n      if (e.originalEvent.ctrlKey) {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                           ' lon: ' + (e.latlng.lng).toFixed(5) +\n                           ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                           ' | zoom: ' + map.getZoom() +\n                           ' | x: ' + L.CRS.EPSG3857.project(e.latlng).x.toFixed(0) +\n                           ' | y: ' + L.CRS.EPSG3857.project(e.latlng).y.toFixed(0) +\n                           ' | epsg: 3857 ' +\n                           ' | proj4: +proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs ');\n      } else {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                      ' lon: ' + (e.latlng.lng).toFixed(5) +\n                      ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                      ' | zoom: ' + map.getZoom() + ' ');\n      }\n      });\n\n      // remove the lnlt div when mouse leaves map\n      map.on('mouseout', function (e) {\n      var strip = document.querySelector('.lnlt');\n      if( strip !==null) strip.remove();\n      });\n\n      };\n\n      //$(el).keypress(67, function(e) {\n      map.on('preclick', function(e) {\n      if (e.originalEvent.ctrlKey) {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                      ' lon: ' + (e.latlng.lng).toFixed(5) +\n                      ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                      ' | zoom: ' + map.getZoom() + ' ');\n      var txt = document.querySelector('.lnlt').textContent;\n      console.log(txt);\n      //txt.innerText.focus();\n      //txt.select();\n      setClipboardText('\"' + txt + '\"');\n      }\n      });\n\n      }\n      ).call(this.getMap(), el, x, data);\n}","data":null},{"code":"function(el, x, data) {\n  return (function(el,x,data){\n           var map = this;\n\n           map.on('keypress', function(e) {\n               console.log(e.originalEvent.code);\n               var key = e.originalEvent.code;\n               if (key === 'KeyE') {\n                   var bb = this.getBounds();\n                   var txt = JSON.stringify(bb);\n                   console.log(txt);\n\n                   setClipboardText('\\'' + txt + '\\'');\n               }\n           })\n        }).call(this.getMap(), el, x, data);\n}","data":null}]}}</script>
+</div>
+<script>
+HTMLWidgets.addPostRenderHandler(function() {
+var leaf_widgets = {};
+                Array.prototype.map.call(
+                 document.querySelectorAll(".leaflet"),
+                   function(ldiv){
+                     if (HTMLWidgets.find("#" + ldiv.id) && HTMLWidgets.find("#" + ldiv.id).getMap()) {
+                        leaf_widgets[ldiv.id] = HTMLWidgets.find("#" + ldiv.id).getMap();
+                     }
+                   }
+                );
+               
+
+leaf_widgets['htmlwidget-4450'].sync(leaf_widgets['htmlwidget-4803'],{syncCursor: true, noInitialSync: true});
+leaf_widgets['htmlwidget-4803'].sync(leaf_widgets['htmlwidget-4450'],{syncCursor: true, noInitialSync: true});
+
+});
+</script>
+]
+
+&lt;style&gt;
+.panel1-viz-transformed-network-user {
+  color: black;
+  width: 38.6060606060606%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-viz-transformed-network-user {
+  color: black;
+  width: 59.3939393939394%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-viz-transformed-network-user {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+class: top, left
+
+count: false
+ 
+## Helper function 2: Transform GPS
+.panel1-transform-gps-demo-user[
+
+```r
+*reveal &lt;- args(.transform_gps)
+
+reveal
+```
+]
+ 
+.panel2-transform-gps-demo-user[
+
+```
+## function (gps) 
+## NULL
+```
+]
+
+---
+count: false
+ 
+## Helper function 2: Transform GPS
+.panel1-transform-gps-demo-user[
+
+```r
+reveal &lt;- args(.transform_gps)
+
+*reveal &lt;- gps
+
+reveal
+```
+]
+ 
+.panel2-transform-gps-demo-user[
+
+```
+## Simple feature collection with 38 features and 2 fields
+## Geometry type: POINT
+## Dimension:     XY
+## Bounding box:  xmin: 569640.7 ymin: 4600905 xmax: 570320 ymax: 4601499
+## Projected CRS: NAD83 / UTM zone 15N
+## # A tibble: 38 x 3
+##    sequence speed_mph           geometry
+##  *    &lt;dbl&gt;     &lt;dbl&gt;        &lt;POINT [m]&gt;
+##  1        1      5.90 (569640.7 4600930)
+##  2        2      5.50 (569654.5 4600928)
+##  3        3      5.21   (569687 4600928)
+##  4        4      9.37 (569703.7 4600927)
+##  5        5     13.4  (569732.3 4600927)
+##  6        6     12.1  (569762.1 4600928)
+##  7        7     13.0    (569796 4600930)
+##  8        8     13.4  (569828.1 4600932)
+##  9        9     11.6  (569855.7 4600931)
+## 10       10     10.6  (569881.7 4600929)
+## # ... with 28 more rows
+```
+]
+
+---
+count: false
+ 
+## Helper function 2: Transform GPS
+.panel1-transform-gps-demo-user[
+
+```r
+reveal &lt;- args(.transform_gps)
+
+reveal &lt;- gps %&gt;%
+* .transform_gps()
+
+reveal
+```
+]
+ 
+.panel2-transform-gps-demo-user[
+
+```
+## # A tibble: 38 x 3
+##       id       x        y
+##    &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;
+##  1     1 569641. 4600930.
+##  2     1 569654. 4600928.
+##  3     1 569687. 4600928.
+##  4     1 569704. 4600927.
+##  5     1 569732. 4600927.
+##  6     1 569762. 4600928.
+##  7     1 569796. 4600930.
+##  8     1 569828. 4600932.
+##  9     1 569856. 4600931.
+## 10     1 569882. 4600929.
+## # ... with 28 more rows
+```
+]
+
+&lt;style&gt;
+.panel1-transform-gps-demo-user {
+  color: black;
+  width: 38.6060606060606%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-transform-gps-demo-user {
+  color: black;
+  width: 59.3939393939394%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-transform-gps-demo-user {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+class: top, left
+
+count: false
+ 
+## Helper function 3: Define UBODT config
+.panel1-define-ubodt-demo-user[
+
+```r
+*reveal &lt;- args(.define_ubodt_config)
+
+reveal
+```
+]
+ 
+.panel2-define-ubodt-demo-user[
+
+```
+## function (network_file, output_file, use_omp = FALSE, ...) 
+## NULL
+```
+]
+
+---
+count: false
+ 
+## Helper function 3: Define UBODT config
+.panel1-define-ubodt-demo-user[
+
+```r
+reveal &lt;- args(.define_ubodt_config)
+
+*reveal &lt;- .define_ubodt_config(
+* network_file = "edges.shp",
+* output_file = "ubodt.txt"
+*) 
+
+reveal
+```
+]
+ 
+.panel2-define-ubodt-demo-user[
+
+```
+## {xml_document}
+## &lt;config&gt;
+## [1] &lt;input&gt;\n  &lt;network&gt;\n    &lt;file&gt;edges.shp&lt;/file&gt;\n    &lt;id&gt;id&lt;/id&gt;\n    &lt;s ...
+## [2] &lt;parameters&gt;\n  &lt;delta&gt;3000&lt;/delta&gt;\n&lt;/parameters&gt;
+## [3] &lt;output&gt;\n  &lt;file&gt;ubodt.txt&lt;/file&gt;\n&lt;/output&gt;
+## [4] &lt;other&gt;\n  &lt;log_level&gt;2&lt;/log_level&gt;\n&lt;/other&gt;
+```
+]
+
+---
+count: false
+ 
+## Helper function 3: Define UBODT config
+.panel1-define-ubodt-demo-user[
+
+```r
+reveal &lt;- args(.define_ubodt_config)
+
+reveal &lt;- .define_ubodt_config(
+  network_file = "edges.shp",
+  output_file = "ubodt.txt"
+) %&gt;%
+* message()
+
+reveal
+```
+]
+ 
+.panel2-define-ubodt-demo-user[
+
+```
+## &lt;?xml version="1.0" encoding="UTF-8"?&gt;
+## &lt;config&gt;
+##   &lt;input&gt;
+##     &lt;network&gt;
+##       &lt;file&gt;edges.shp&lt;/file&gt;
+##       &lt;id&gt;id&lt;/id&gt;
+##       &lt;source&gt;source&lt;/source&gt;
+##       &lt;target&gt;target&lt;/target&gt;
+##     &lt;/network&gt;
+##   &lt;/input&gt;
+##   &lt;parameters&gt;
+##     &lt;delta&gt;3000&lt;/delta&gt;
+##   &lt;/parameters&gt;
+##   &lt;output&gt;
+##     &lt;file&gt;ubodt.txt&lt;/file&gt;
+##   &lt;/output&gt;
+##   &lt;other&gt;
+##     &lt;log_level&gt;2&lt;/log_level&gt;
+##   &lt;/other&gt;
+## &lt;/config&gt;
+```
+
+```
+## NULL
+```
+]
+
+&lt;style&gt;
+.panel1-define-ubodt-demo-user {
+  color: black;
+  width: 38.6060606060606%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-define-ubodt-demo-user {
+  color: black;
+  width: 59.3939393939394%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-define-ubodt-demo-user {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+class: top, left
+
+count: false
+ 
+## Helper function 4: Define map match config
+.panel1-define-map-match-demo-user[
+
+```r
+*reveal &lt;- args(.define_map_match_config)
+
+reveal
+```
+]
+ 
+.panel2-define-map-match-demo-user[
+
+```
+## function (network_file, gps_file, output_file, match_method = "fmm", 
+##     ubodt_file = NULL, gps_point = TRUE, use_omp = FALSE, ...) 
+## NULL
+```
+]
+
+---
+count: false
+ 
+## Helper function 4: Define map match config
+.panel1-define-map-match-demo-user[
+
+```r
+reveal &lt;- args(.define_map_match_config)
+
+*reveal &lt;- .define_map_match_config(
+* network_file = "edges.shp",
+* gps_file = "trips.csv",
+* output_file = "mr.txt",
+* ubodt_file = "ubodt.txt"
+*) 
+
+reveal
+```
+]
+ 
+.panel2-define-map-match-demo-user[
+
+```
+## {xml_document}
+## &lt;config&gt;
+## [1] &lt;input&gt;\n  &lt;network&gt;\n    &lt;file&gt;edges.shp&lt;/file&gt;\n    &lt;id&gt;id&lt;/id&gt;\n    &lt;s ...
+## [2] &lt;parameters&gt;\n  &lt;k&gt;8&lt;/k&gt;\n  &lt;r&gt;300&lt;/r&gt;\n  &lt;gps_error&gt;50&lt;/gps_error&gt;\n&lt;/pa ...
+## [3] &lt;output&gt;\n  &lt;file&gt;mr.txt&lt;/file&gt;\n  &lt;fields&gt;\n    &lt;all/&gt;\n  &lt;/fields&gt;\n&lt;/o ...
+## [4] &lt;other&gt;\n  &lt;log_level&gt;2&lt;/log_level&gt;\n  &lt;step&gt;100&lt;/step&gt;\n&lt;/other&gt;
+```
+]
+
+---
+count: false
+ 
+## Helper function 4: Define map match config
+.panel1-define-map-match-demo-user[
+
+```r
+reveal &lt;- args(.define_map_match_config)
+
+reveal &lt;- .define_map_match_config(
+  network_file = "edges.shp",
+  gps_file = "trips.csv",
+  output_file = "mr.txt",
+  ubodt_file = "ubodt.txt"
+) %&gt;%
+* message()
+
+reveal
+```
+]
+ 
+.panel2-define-map-match-demo-user[
+
+```
+## &lt;?xml version="1.0" encoding="UTF-8"?&gt;
+## &lt;config&gt;
+##   &lt;input&gt;
+##     &lt;network&gt;
+##       &lt;file&gt;edges.shp&lt;/file&gt;
+##       &lt;id&gt;id&lt;/id&gt;
+##       &lt;source&gt;source&lt;/source&gt;
+##       &lt;target&gt;target&lt;/target&gt;
+##     &lt;/network&gt;
+##     &lt;gps&gt;
+##       &lt;file&gt;trips.csv&lt;/file&gt;
+##       &lt;id&gt;id&lt;/id&gt;
+##       &lt;x&gt;x&lt;/x&gt;
+##       &lt;y&gt;y&lt;/y&gt;
+##       &lt;timestamp&gt;timestamp&lt;/timestamp&gt;
+##       &lt;gps_point/&gt;
+##     &lt;/gps&gt;
+##     &lt;ubodt&gt;
+##       &lt;file&gt;ubodt.txt&lt;/file&gt;
+##     &lt;/ubodt&gt;
+##   &lt;/input&gt;
+##   &lt;parameters&gt;
+##     &lt;k&gt;8&lt;/k&gt;
+##     &lt;r&gt;300&lt;/r&gt;
+##     &lt;gps_error&gt;50&lt;/gps_error&gt;
+##   &lt;/parameters&gt;
+##   &lt;output&gt;
+##     &lt;file&gt;mr.txt&lt;/file&gt;
+##     &lt;fields&gt;
+##       &lt;all/&gt;
+##     &lt;/fields&gt;
+##   &lt;/output&gt;
+##   &lt;other&gt;
+##     &lt;log_level&gt;2&lt;/log_level&gt;
+##     &lt;step&gt;100&lt;/step&gt;
+##   &lt;/other&gt;
+## &lt;/config&gt;
+```
+
+```
+## NULL
+```
+]
+
+&lt;style&gt;
+.panel1-define-map-match-demo-user {
+  color: black;
+  width: 38.6060606060606%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-define-map-match-demo-user {
+  color: black;
+  width: 59.3939393939394%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-define-map-match-demo-user {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+class: middle, center
+
+# Main functions
+
+---
+
+class: top, left
+
+count: false
+ 
+## Main function: Snap GPS traces
+.panel1-snap-gps-traces-demo-user[
+
+```r
+*snap_res &lt;- args(snap_gps_traces)
+
+snap_res
+```
+]
+ 
+.panel2-snap-gps-traces-demo-user[
+
+```
+## function (network, gps, match_method = "fmm", delta = 3000, candidates = 8, 
+##     radius = 300, gps_error = 50, gps_point = TRUE, use_omp = FALSE, 
+##     ubodt_config = NULL, match_config = NULL) 
+## NULL
+```
+]
+
+---
+count: false
+ 
+## Main function: Snap GPS traces
+.panel1-snap-gps-traces-demo-user[
+
+```r
+snap_res &lt;- args(snap_gps_traces)
+
+*snap_res &lt;- read_delim(
+* here("data", "snap-output.txt"),
+* delim = ";",
+* col_types = cols(.default = "c")
+*) %&gt;%
+* glimpse()
+
+snap_res
+```
+]
+ 
+.panel2-snap-gps-traces-demo-user[
+
+```
+## Rows: 1
+## Columns: 14
+## $ id       &lt;chr&gt; "1"
+## $ opath    &lt;chr&gt; "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,53,53,53,5~
+## $ error    &lt;chr&gt; "4.20159,6.32479,6.35744,7.67548,8.22134,7.44478,5.49602,3.04~
+## $ offset   &lt;chr&gt; "533.694,547.488,579.928,596.593,625.213,655.111,689.051,721.~
+## $ spdist   &lt;chr&gt; "13.7941,32.4399,16.6654,28.6198,29.8974,33.9405,32.0662,27.6~
+## $ pgeom    &lt;chr&gt; "LINESTRING(569640.65 4600933.70142,569654.443551 4600933.824~
+## $ cpath    &lt;chr&gt; "1,53"
+## $ tpath    &lt;chr&gt; "1|1|1|1|1|1|1|1|1|1|1|1|1|1|1|1|1|1|1|1|1|1|1|1|1,53|53|53|5~
+## $ mgeom    &lt;chr&gt; "LINESTRING(569640.65 4600933.70142,569663.005055 4600933.900~
+## $ ep       &lt;chr&gt; "0.996475558307,0.9920313364,0.991949166576,0.988286544171,0.~
+## $ tp       &lt;chr&gt; "0,1,1,1,1,0.995631130634,1,1,1,1,1,1,1,1,1,1,0.875954091182,~
+## $ length   &lt;chr&gt; "1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207~
+## $ duration &lt;chr&gt; NA
+## $ speed    &lt;chr&gt; NA
+```
+
+```
+## # A tibble: 1 x 14
+##   id    opath     error offset spdist pgeom cpath tpath mgeom ep    tp    length
+##   &lt;chr&gt; &lt;chr&gt;     &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; 
+## 1 1     1,1,1,1,~ 4.20~ 533.6~ 13.79~ LINE~ 1,53  1|1|~ LINE~ 0.99~ 0,1,~ 1207.~
+## # ... with 2 more variables: duration &lt;chr&gt;, speed &lt;chr&gt;
+```
+]
+
+&lt;style&gt;
+.panel1-snap-gps-traces-demo-user {
+  color: black;
+  width: 38.6060606060606%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-snap-gps-traces-demo-user {
+  color: black;
+  width: 59.3939393939394%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-snap-gps-traces-demo-user {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+class: top, left
+
+count: false
+ 
+## Main function: Visualize snap output
+.panel1-viz-snap-output-geom-user[
+
+```r
+*reveal &lt;- args(viz_snap_output_geom)
+
+reveal
+```
+]
+ 
+.panel2-viz-snap-output-geom-user[
+
+```
+## function (gps, snap_output) 
+## NULL
+```
+]
+
+---
+count: false
+ 
+## Main function: Visualize snap output
+.panel1-viz-snap-output-geom-user[
+
+```r
+reveal &lt;- args(viz_snap_output_geom)
+*reveal &lt;- viz_snap_output_geom(gps, snap_res)
+
+reveal
+```
+]
+ 
+.panel2-viz-snap-output-geom-user[
+<div id="htmlwidget-fa223a7928120da1978b" style="width:100%;height:504px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-fa223a7928120da1978b">{"x":{"options":{"minZoom":1,"maxZoom":52,"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"preferCanvas":false,"bounceAtZoomLimits":false,"maxBounds":[[[-90,-370]],[[90,370]]]},"calls":[{"method":"addProviderTiles","args":["CartoDB.Positron","CartoDB.Positron","CartoDB.Positron",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["CartoDB.DarkMatter","CartoDB.DarkMatter","CartoDB.DarkMatter",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["OpenStreetMap","OpenStreetMap","OpenStreetMap",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["Esri.WorldImagery","Esri.WorldImagery","Esri.WorldImagery",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["OpenTopoMap","OpenTopoMap","OpenTopoMap",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"createMapPane","args":["point",440]},{"method":"addCircleMarkers","args":[[41.557005,41.556985,41.556986667,41.556978333,41.556973333,41.556978333,41.556993333,41.557013333,41.557001667,41.556976667,41.55693,41.55692,41.556896667,41.556863333,41.556838333,41.556801667,41.556768333,41.556761667,41.556745,41.556946667,41.557025,41.557043333,41.557086667,41.557108333,41.557253333,41.558391667,41.558751667,41.559073333,41.559443333,41.55982,41.560205,41.560533333,41.560941667,41.561328333,41.56167,41.56191,41.562051667,41.562076667],[-92.16487833,-92.16471333,-92.16432333,-92.16412333,-92.16378,-92.16342333,-92.16301667,-92.16263167,-92.1623,-92.16198833,-92.16170333,-92.16139333,-92.16113667,-92.16087167,-92.16057667,-92.16029167,-92.15986667,-92.15940667,-92.15901,-92.15850167,-92.15804667,-92.15770167,-92.15737833,-92.157215,-92.15715,-92.156735,-92.15673667,-92.156705,-92.15674167,-92.156765,-92.15680167,-92.15681167,-92.15677,-92.15672,-92.15668333,-92.15672833,-92.15682167,-92.156845],6,null,"st_geometry(gps)",{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"pane":"point","stroke":true,"color":"#333333","weight":1,"opacity":0.9,"fill":true,"fillColor":"#6666ff","fillOpacity":0.6},null,null,null,{"maxWidth":800,"minWidth":50,"autoPan":true,"keepInView":false,"closeButton":true,"closeOnClick":true,"className":""},["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38"],{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addScaleBar","args":[{"maxWidth":100,"metric":true,"imperial":true,"updateWhenIdle":true,"position":"bottomleft"}]},{"method":"addHomeButton","args":[-92.16487833,41.556745,-92.15668333,41.562076667,true,"st_geometry(gps)","Zoom to st_geometry(gps)","<strong> st_geometry(gps) <\/strong>","bottomright"]},{"method":"createMapPane","args":["line",430]},{"method":"addPolylines","args":[[[[{"lng":[-92.1648785900158,-92.16461051542,-92.16365842991,-92.162378225611,-92.1613500767748,-92.1607597921595,-92.1605025299105,-92.1601830361074,-92.1596740924913,-92.1591173398104,-92.1587269901968,-92.1582787135373,-92.1576305775456,-92.1573449154022,-92.1569878738843,-92.1568035296365,-92.156829225923,-92.1568543213489,-92.1568502805209,-92.1568381166169,-92.156841013754,-92.1568432625217],"lat":[41.5570420339659,41.5570418838269,41.5570486008417,41.5570407338007,41.5570429622958,41.5570467547056,41.5570580311424,41.557086453277,41.5570697423709,41.5570631936546,41.5570657510209,41.5571069518625,41.5571457972011,41.5571495828126,41.5571525254576,41.5571539653684,41.5576769039554,41.5584984670337,41.5594506112239,41.5607914722287,41.5616643490895,41.5620751905806]}]]],null,"mgeom",{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"pane":"line","stroke":true,"color":"#6666ff","weight":2,"opacity":0.9,"fill":false,"fillColor":"#6666ff","fillOpacity":1,"smoothFactor":1,"noClip":false},null,{"maxWidth":800,"minWidth":50,"autoPan":true,"keepInView":false,"closeButton":true,"closeOnClick":true,"className":""},"1",{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},{"stroke":true,"weight":3,"opacity":1,"fill":false,"fillOpacity":0,"bringToFront":false,"sendToBack":false}]},{"method":"addHomeButton","args":[-92.1648785900158,41.5570407338007,-92.1568035296365,41.5620751905806,true,"mgeom","Zoom to mgeom","<strong> mgeom <\/strong>","bottomright"]},{"method":"addCircleMarkers","args":[[41.5570420339659,41.5570419413619,41.5570439046468,41.5570453145499,41.5570477351122,41.5570471533764,41.5570446531596,41.5570422896811,41.5570409040561,41.557041579726,41.5570421968688,41.5570428681341,41.5570443249143,41.5570460240556,41.5570540527189,41.5570729764887,41.5570754874529,41.5570665237872,41.5570638742654,41.5570843996634,41.557120255227,41.5571408973145,41.557149121159,41.5571506465943,41.5571512042936,41.5583884119669,41.5587509993073,41.5590750989107,41.5594445756589,41.5598187046896,41.5602060799101,41.5605348509622,41.5609395931369,41.5613264416866,41.5616681850661,41.5619118510929,41.5620524338712,41.5620751905806],[-92.1648785900158,-92.1647131822085,-92.1643242014738,-92.1641243721543,-92.1637812015392,-92.1634227088295,-92.1630157353268,-92.1626312355487,-92.1622998042787,-92.1619884365565,-92.1617036747987,-92.1613935794168,-92.1611380423999,-92.1608735577148,-92.1605932948335,-92.160334529559,-92.15984905737,-92.1594004284706,-92.1590134723595,-92.1585240898076,-92.1580567537426,-92.1577123366062,-92.1573797554225,-92.1572158534995,-92.1571481908216,-92.1568509595854,-92.1568532496568,-92.1568518742141,-92.1568503061367,-92.1568469413869,-92.1568434272447,-92.1568404446825,-92.1568386082453,-92.1568398922315,-92.1568410347519,-92.156842368475,-92.1568431379515,-92.1568432625217],6,null,"pgeom_points",{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"pane":"point","stroke":true,"color":"#333333","weight":1,"opacity":0.9,"fill":true,"fillColor":"#6666ff","fillOpacity":0.6},null,null,null,{"maxWidth":800,"minWidth":50,"autoPan":true,"keepInView":false,"closeButton":true,"closeOnClick":true,"className":""},["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38"],{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addHomeButton","args":[-92.1648785900158,41.5570409040561,-92.1568386082453,41.5620751905806,true,"pgeom_points","Zoom to pgeom_points","<strong> pgeom_points <\/strong>","bottomright"]},{"method":"addPolylines","args":[[[[{"lng":[-92.1648785900158,-92.1647131822085,-92.1643242014738,-92.1641243721543,-92.1637812015392,-92.1634227088295,-92.1630157353268,-92.1626312355487,-92.1622998042787,-92.1619884365565,-92.1617036747987,-92.1613935794168,-92.1611380423999,-92.1608735577148,-92.1605932948335,-92.160334529559,-92.15984905737,-92.1594004284706,-92.1590134723595,-92.1585240898076,-92.1580567537426,-92.1577123366062,-92.1573797554225,-92.1572158534995,-92.1571481908216,-92.1568509595854,-92.1568532496568,-92.1568518742141,-92.1568503061367,-92.1568469413869,-92.1568434272447,-92.1568404446825,-92.1568386082453,-92.1568398922315,-92.1568410347519,-92.156842368475,-92.1568431379515,-92.1568432625217],"lat":[41.5570420339659,41.5570419413619,41.5570439046468,41.5570453145499,41.5570477351122,41.5570471533764,41.5570446531596,41.5570422896811,41.5570409040561,41.557041579726,41.5570421968688,41.5570428681341,41.5570443249143,41.5570460240556,41.5570540527189,41.5570729764887,41.5570754874529,41.5570665237872,41.5570638742654,41.5570843996634,41.557120255227,41.5571408973145,41.557149121159,41.5571506465943,41.5571512042936,41.5583884119669,41.5587509993073,41.5590750989107,41.5594445756589,41.5598187046896,41.5602060799101,41.5605348509622,41.5609395931369,41.5613264416866,41.5616681850661,41.5619118510929,41.5620524338712,41.5620751905806]}]]],null,"pgeom_path",{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"pane":"line","stroke":true,"color":"#6666ff","weight":2,"opacity":0.9,"fill":false,"fillColor":"#6666ff","fillOpacity":1,"smoothFactor":1,"noClip":false},null,{"maxWidth":800,"minWidth":50,"autoPan":true,"keepInView":false,"closeButton":true,"closeOnClick":true,"className":""},"1",{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},{"stroke":true,"weight":3,"opacity":1,"fill":false,"fillOpacity":0,"bringToFront":false,"sendToBack":false}]},{"method":"addHomeButton","args":[-92.1648785900158,41.5570409040561,-92.1568386082453,41.5620751905806,true,"pgeom_path","Zoom to pgeom_path","<strong> pgeom_path <\/strong>","bottomright"]},{"method":"addLayersControl","args":[["CartoDB.Positron","CartoDB.DarkMatter","OpenStreetMap","Esri.WorldImagery","OpenTopoMap"],["st_geometry(gps)","mgeom","pgeom_points","pgeom_path"],{"collapsed":true,"autoZIndex":true,"position":"topleft"}]},{"method":"addHomeButton","args":[-92.1648785900158,41.556745,-92.15668333,41.562076667,true,null,"Zoom to full extent","<strong>Zoom full<\/strong>","bottomleft"]}],"limits":{"lat":[41.556745,41.562076667],"lng":[-92.16487833,-92.15668333]},"fitBounds":[41.556745,-92.1648785900158,41.562076667,-92.15668333,[]]},"evals":[],"jsHooks":{"render":[{"code":"function(el, x, data) {\n  return (\n      function(el, x, data) {\n      // get the leaflet map\n      var map = this; //HTMLWidgets.find('#' + el.id);\n      // we need a new div element because we have to handle\n      // the mouseover output separately\n      // debugger;\n      function addElement () {\n      // generate new div Element\n      var newDiv = $(document.createElement('div'));\n      // append at end of leaflet htmlwidget container\n      $(el).append(newDiv);\n      //provide ID and style\n      newDiv.addClass('lnlt');\n      newDiv.css({\n      'position': 'relative',\n      'bottomleft':  '0px',\n      'background-color': 'rgba(255, 255, 255, 0.7)',\n      'box-shadow': '0 0 2px #bbb',\n      'background-clip': 'padding-box',\n      'margin': '0',\n      'padding-left': '5px',\n      'color': '#333',\n      'font': '9px/1.5 \"Helvetica Neue\", Arial, Helvetica, sans-serif',\n      'z-index': '700',\n      });\n      return newDiv;\n      }\n\n\n      // check for already existing lnlt class to not duplicate\n      var lnlt = $(el).find('.lnlt');\n\n      if(!lnlt.length) {\n      lnlt = addElement();\n\n      // grab the special div we generated in the beginning\n      // and put the mousmove output there\n\n      map.on('mousemove', function (e) {\n      if (e.originalEvent.ctrlKey) {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                           ' lon: ' + (e.latlng.lng).toFixed(5) +\n                           ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                           ' | zoom: ' + map.getZoom() +\n                           ' | x: ' + L.CRS.EPSG3857.project(e.latlng).x.toFixed(0) +\n                           ' | y: ' + L.CRS.EPSG3857.project(e.latlng).y.toFixed(0) +\n                           ' | epsg: 3857 ' +\n                           ' | proj4: +proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs ');\n      } else {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                      ' lon: ' + (e.latlng.lng).toFixed(5) +\n                      ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                      ' | zoom: ' + map.getZoom() + ' ');\n      }\n      });\n\n      // remove the lnlt div when mouse leaves map\n      map.on('mouseout', function (e) {\n      var strip = document.querySelector('.lnlt');\n      if( strip !==null) strip.remove();\n      });\n\n      };\n\n      //$(el).keypress(67, function(e) {\n      map.on('preclick', function(e) {\n      if (e.originalEvent.ctrlKey) {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                      ' lon: ' + (e.latlng.lng).toFixed(5) +\n                      ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                      ' | zoom: ' + map.getZoom() + ' ');\n      var txt = document.querySelector('.lnlt').textContent;\n      console.log(txt);\n      //txt.innerText.focus();\n      //txt.select();\n      setClipboardText('\"' + txt + '\"');\n      }\n      });\n\n      }\n      ).call(this.getMap(), el, x, data);\n}","data":null},{"code":"function(el, x, data) {\n  return (function(el,x,data){\n           var map = this;\n\n           map.on('keypress', function(e) {\n               console.log(e.originalEvent.code);\n               var key = e.originalEvent.code;\n               if (key === 'KeyE') {\n                   var bb = this.getBounds();\n                   var txt = JSON.stringify(bb);\n                   console.log(txt);\n\n                   setClipboardText('\\'' + txt + '\\'');\n               }\n           })\n        }).call(this.getMap(), el, x, data);\n}","data":null}]}}</script>
+]
+
+&lt;style&gt;
+.panel1-viz-snap-output-geom-user {
+  color: black;
+  width: 38.6060606060606%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-viz-snap-output-geom-user {
+  color: black;
+  width: 59.3939393939394%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-viz-snap-output-geom-user {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+class: top, left
+
+count: false
+ 
+## Main function: Visualize snap output
+.panel1-viz-snap-output-num-user[
+
+```r
+*reveal &lt;- args(viz_snap_output_num)
+
+reveal
+```
+]
+ 
+.panel2-viz-snap-output-num-user[
+
+```
+## function (snap_output) 
+## NULL
+```
+]
+
+---
+count: false
+ 
+## Main function: Visualize snap output
+.panel1-viz-snap-output-num-user[
+
+```r
+reveal &lt;- args(viz_snap_output_num)
+*reveal &lt;- viz_snap_output_num(snap_res)
+
+reveal
+```
+]
+ 
+.panel2-viz-snap-output-num-user[
+<div id="htmlwidget-772c34512026dfc510c0" style="width:100%;height:504px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-772c34512026dfc510c0">{"x":{"visdat":{"17fe01ba8ab3":["function () ","plotlyVisDat"]},"cur_data":"17fe01ba8ab3","attrs":{"17fe01ba8ab3":{"x":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38],"y":[4.20159,6.32479,6.35744,7.67548,8.22134,7.44478,5.49602,3.04443,4.15894,6.98607,12.2855,13.6111,16.4815,20.385,24.0557,30.5593,34.0029,33.8528,35.3782,15.1795,10.4507,11.0248,7.167,4.468,11.4184,9.69822,9.71472,12.2639,9.03352,6.8458,3.47265,2.39281,5.74132,10.018,13.1718,9.48424,1.76255,0.140077],"mode":"lines+markers","alpha_stroke":1,"sizes":[10,100],"spans":[1,20]}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"xaxis":{"domain":[0,1],"automargin":true,"title":{"text":"Point index"}},"yaxis":{"domain":[0,1],"automargin":true,"title":{"text":"GPS error (meter)"}},"updatemenus":[{"buttons":[{"method":"update","args":[{"y":[[4.20159,6.32479,6.35744,7.67548,8.22134,7.44478,5.49602,3.04443,4.15894,6.98607,12.2855,13.6111,16.4815,20.385,24.0557,30.5593,34.0029,33.8528,35.3782,15.1795,10.4507,11.0248,7.167,4.468,11.4184,9.69822,9.71472,12.2639,9.03352,6.8458,3.47265,2.39281,5.74132,10.018,13.1718,9.48424,1.76255,0.140077]]},{"yaxis":{"title":{"text":"GPS error (meter)"}}}],"label":"GPS error (meter)"},{"method":"update","args":[{"y":[[1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1207.84590729,1188.54029655,1188.54029655,1188.54029655,1188.54029655,1188.54029655,1188.54029655,1188.54029655,1188.54029655,1188.54029655,1188.54029655,1188.54029655,1188.54029655,1188.54029655]]},{"yaxis":{"title":{"text":"Edge length (meter)"}}}],"label":"Edge length (meter)"},{"method":"update","args":[{"y":[[533.694,547.488,579.928,596.593,625.213,655.111,689.051,721.117,748.758,774.724,798.472,824.332,845.643,867.701,891.097,912.787,953.388,990.818,1023.09,1064.03,1103.21,1132.03,1159.79,1173.46,1179.1,137.117,177.378,213.362,254.384,295.923,338.933,375.437,420.375,463.326,501.268,528.322,543.931,546.457]]},{"yaxis":{"title":{"text":"Offset (meter)"}}}],"label":"Offset (meter)"},{"method":"update","args":[{"y":[[13.7941,32.4399,16.6654,28.6198,29.8974,33.9405,32.0662,27.6403,25.9665,23.7477,25.8604,21.311,22.0574,23.3964,21.6904,40.6006,37.4299,32.2732,40.9389,39.1847,28.8138,27.7603,13.6696,5.64303,165.862,40.2604,35.984,41.0221,41.5394,43.0101,36.5033,44.9381,42.9508,37.9429,27.0538,15.6086,2.52664]]},{"yaxis":{"title":{"text":"SP length (meter)"}}}],"label":"SP length (meter)"},{"method":"update","args":[{"y":[[0.996475558307,0.9920313364,0.991949166576,0.988286544171,0.986572877183,0.98897626223,0.993976969242,0.998148011551,0.996546616701,0.990286440644,0.97026452666,0.963625408397,0.947121514402,0.920249969525,0.890710755104,0.829631056036,0.793549326474,0.795167956542,0.778549071634,0.954962334355,0.978393424421,0.975984029176,0.989779398307,0.99601535383,0.974260909483,0.981364721724,0.981301867385,0.970367414885,0.983811561693,0.990670782093,0.997591051629,0.998855550531,0.993429138018,0.980127903619,0.965896064986,0.982170682661,0.999378875047,0.999996075702]]},{"yaxis":{"title":{"text":"Emission probability"}}}],"label":"Emission probability"},{"method":"update","args":[{"y":[[0,1,1,1,1,0.995631130634,1,1,1,1,1,1,1,1,1,1,0.875954091182,1,1,1,0.993490376069,1,0.986933405871,1,1,0.788781578796,0.993631330454,1,1,1,1,1,1,1,1,1,1,1]]},{"yaxis":{"title":{"text":"Transit probability"}}}],"label":"Transit probability"}],"showactive":true,"x":0.11,"xanchor":"left","y":1.1,"yanchor":"top","pad":{"l":0}}],"annotations":[{"text":"Feature:","showarrow":false,"x":0,"y":1.08,"yref":"paper","align":"left"}],"hovermode":"closest","showlegend":false},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"x":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38],"y":[4.20159,6.32479,6.35744,7.67548,8.22134,7.44478,5.49602,3.04443,4.15894,6.98607,12.2855,13.6111,16.4815,20.385,24.0557,30.5593,34.0029,33.8528,35.3782,15.1795,10.4507,11.0248,7.167,4.468,11.4184,9.69822,9.71472,12.2639,9.03352,6.8458,3.47265,2.39281,5.74132,10.018,13.1718,9.48424,1.76255,0.140077],"mode":"lines+markers","type":"scatter","marker":{"color":"rgba(31,119,180,1)","line":{"color":"rgba(31,119,180,1)"}},"error_y":{"color":"rgba(31,119,180,1)"},"error_x":{"color":"rgba(31,119,180,1)"},"line":{"color":"rgba(31,119,180,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+]
+
+&lt;style&gt;
+.panel1-viz-snap-output-num-user {
+  color: black;
+  width: 38.6060606060606%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-viz-snap-output-num-user {
+  color: black;
+  width: 59.3939393939394%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-viz-snap-output-num-user {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+class: top, left
+
+## Things to do
+
+- Create the package
+- Design logo
+- Write function to automate fmm installation
+- Write paper for submission to Elsevier's SoftwareX
+
+---
+
+class: middle, center
+
+# Thank You!
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
