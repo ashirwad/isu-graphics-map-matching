@@ -42,6 +42,31 @@ source(here("code", "map-matching-functions.R"))
 library(knitr)
 ```
 
+```{r xaringan-themer, include = FALSE}
+library(xaringanthemer)
+style_mono_accent(
+  # hex color should be provided, or theme_xaringan doesn't work
+  base_color = "#ffa500", # orange
+  title_slide_background_image = "figs/milano.png",
+  background_image = "figs/milano_bg.png",
+  code_font_size = "14px",
+  text_slide_number_color = "#b3b3b3", # grey70
+  link_color = "#ff4500", # orangered  
+  footnote_font_size = "0.5em",
+  footnote_position_bottom = "30px",
+  code_highlight_color = "#ffedcc", # faded-orange
+  extra_css = list(
+    ".pull-left-70" = list("float" = "left", "width" = "65.8%"),
+    ".pull-right-30" = list("float" = "right", "width" = "28.2%"),
+    ".pull-left-30" = list("float" = "left", "width" = "28.2%"),
+    ".pull-right-70" = list("float" = "right", "width" = "65.8%"),
+    ".orange" = list("color" = "#ffa500"),
+    ".note" = list("font-size" = "0.8em", "position" = "absolute", 
+      "bottom" = "30px", "padding-right" = "4em")
+  )
+)
+```
+
 ## What is map matching?
 
 --
