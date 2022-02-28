@@ -256,6 +256,19 @@ viz_snap_output_geom <- function(gps, snap_output) {
     )
 }
 
+.viz_transformed_network <- function(network) {
+  transformed_network <- .transform_network(network) %>%
+    as_sfnetwork()
+
+  nodes <- transformed_network %>% st_as_sf("nodes")
+  edges <- transformed_network %>% st_as_sf("edges")
+
+  sync(
+    mapview(network),
+    mapview(list(nodes, edges))
+  )
+}
+
 viz_snap_output_num <- function(snap_output) {
   num_fields <- c("error", "length", "offset", "spdist", "ep", "tp") %>%
     set_names(
@@ -317,17 +330,11 @@ viz_snap_output_num <- function(snap_output) {
               str_split(",") %>%
               simplify() %>%
               as.numeric()
-          ),
-          yaxis = list(title = list(text = .y))
-        )
+          )
+        ),
+        list(yaxis = list(title = list(text = .y)))
       ),
       label = .y
     )
   )
 }
-
-
-
-
-
-
