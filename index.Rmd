@@ -745,6 +745,14 @@ class: top, left
 
 ---
 
+class: top, left
+
+## Acknowledgements
+
+> This work was funded by the Centers for Disease Control and Prevention (U54 OH 007548). Its contents are solely the responsibility of the authors and do not necessarily represent the official views of the Centers for Disease Control and Prevention or the Department of Health and Human Services.
+
+---
+
 class: middle, center
 
 # Thank You!
